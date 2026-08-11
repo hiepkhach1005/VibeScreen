@@ -1,0 +1,186 @@
+﻿@using ColorControl.Shared.Contracts
+@using ColorControl.Shared.Contracts.NVIDIA
+@using ColorControl.UI.Components.Pages.Generic
+@using ColorControl.UI.Services;
+@using ColorControl.Shared.Common;
+
+@rendermode Constants.RenderMode
+
+@inject RpcUiClientService _rpcClientService
+@inject JSHelper jsHelper;
+
+<div class="modal modal-lg" id="gpuSettingsModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" @onfocus="OnFocus">
+    <div class="modal-dialog modal-dialog-scrollable modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">@(Preset != null ? $"GPU settings for {Preset.IdOrName}" : $"GPU settings for {GpuInfo?.Name ?? "?"}")</h5>
+                @if (Preset == null)
+                {
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" @onclick="() => IsVisible = false"></button>
+                }
+                else
+                {
+                    <button type="button" class="btn-close" data-bs-toggle="modal" data-bs-target="#presetModal" aria-label="Close" @onclick="() => IsVisible = false"></button>
+                }
+            </div>
+            <div class="modal-body">
+                <form class="row g-1">
+
+                    @if (OverclockSettings != null && GpuInfos?.Any() == true)
+                    {
+                        <div class="mb-2">
+                            <label class="form-label" for="gpu">GPU</label>
+                            <select class="form-select" id="gpu" @bind="OverclockSettings.PCIIdentifier">
+                                @foreach (var gpu in GpuInfos)
+                                {
+                                    <option value="@gpu.PCIIdentifier">@gpu.Name</option>
+                                }
+                            </select>
+                        </div>
+                    }
+
+                    @if (OverclockSettings != null && GpuInfo != null)
+                    {
+                        <div class="mb-2">
+                            <label class="form-label" for="ocType">Overclock method</label>
+                            <select class="form-select" id="ocType" @bind="OverclockSettings.Type">
+                                @foreach (var ocType in Enum.GetValues<NvGpuOcType>())
+                                {
+                                    <option value="@ocType.ToString()">@ocType.GetDescription()</option>
+                                }
+                            </select>
+                        </div>
+
+                        @if (OverclockSettings.Type is NvGpuOcType.Curve or NvGpuOcType.Offset)
+                        {
+                            <RangeInput TValue="int" Min="@GpuInfo.CorrectedMinCoreDeltaInMHz" Max="@GpuInfo.MaxCoreDeltaInMHz" Step="@GpuInfo.MinCoreStepInMHz" @bind-Value="OverclockSettings.GraphicsOffsetMHz" Id="coreOffset" Label="Core offset" UnitString="MHz"
+                                        SubLabel="@($"Min: {GpuInfo.MinCoreDeltaInMHz.ToSignedUnitString()}, Max: {GpuInfo.MaxCoreDeltaInMHz.ToSignedUnitString()}")" />
+                            <RangeInput TValue="int" Min="@GpuInfo.MinMemoryDeltaInMHz" Max="@GpuInfo.MaxMemoryDeltaInMHz" @bind-Value="OverclockSettings.MemoryOffsetMHz" Id="memoryOffset" Label="Memory offset" UnitString="MHz"
+                                        SubLabel="@($"Min: {GpuInfo.MinMemoryDeltaInMHz.ToSignedUnitString()}, Max: {GpuInfo.MaxMemoryDeltaInMHz.ToSignedUnitString()}")" />
+                        }
+                        @if (OverclockSettings.Type is NvGpuOcType.Curve or NvGpuOcType.BoostLock)
+                        {
+                            <RangeInput TValue="uint" Min="@GpuInfo.MinCurveFrequencyInMHz" Max="@GpuInfo.MaxCurveFrequencyInMHz" Step="@((uint)GpuInfo.MinCoreStepInMHz)" @bind-Value="OverclockSettings.MaximumFrequencyMHz" Id="maxCoreFrequency" Label="Maximum core frequency" UnitString="MHz"
+                                        SubLabel="@($"Setting this value to anything else than '0' will limit the maximum frequency of the curve. Min: {GpuInfo.MinCurveFrequencyInMHz.ToSignedUnitString()}, Max: {GpuInfo.MaxCurveFrequencyInMHz.ToSignedUnitString()}")" />
+                            <RangeInput TValue="uint" Min="@GpuInfo.MinCurveVoltageInMv" Max="@GpuInfo.MaxCurveVoltageInMv" Step="5" @bind-Value="OverclockSettings.MaximumVoltageMv" Id="maxCoreVoltage" Label="Maximum core voltage" UnitString="mv"
+                                        SubLabel="@($"Setting this value to anything else than '0' will limit the maximum voltage (and also the frequency) of the curve. Min: {GpuInfo.MinCurveVoltageInMv.ToUnitString("mv")}, Max: {GpuInfo.MaxCurveVoltageInMv.ToUnitString("mv")}")" />
+                        }
+                        @if (OverclockSettings.Type != NvGpuOcType.None)
+                        {
+                            <RangeInput TValue="uint" @bind-Value="OverclockSettings.VoltageBoostPercent" Id="voltageBoost" Label="Voltage boost" UnitString="%" />
+
+                            @if (GpuInfo.DefaultPowerInMilliWatts > 0 && GpuInfo.MaxPowerInMilliWatts > 0 && GpuInfo.MinPowerInMilliWatts > 0 && GpuInfo.MaxPowerInMilliWatts > GpuInfo.MinPowerInMilliWatts)
+                            {
+                                <RangeInput TValue="uint" Min="@GpuInfo.MinimumPowerInPCM" Max="@GpuInfo.MaximumPowerInPCM" @bind-Value="OverclockSettings.PowerPCM" Id="powerLimitWatts" Label="Power limit"
+                                            CustomLabelFunc='value => $"{((uint)(OverclockSettings.PowerPCM / 100000f * GpuInfo.DefaultPowerInMilliWatts)).ToKiloUnitString(units: "W")} ({OverclockSettings.PowerPCM.ToKiloUnitString(units: "%")})"'
+                                            SubLabel="@($"Min: {GpuInfo.MinPowerInMilliWatts.ToKiloUnitString(units: "W")}, Max: {GpuInfo.MaxPowerInMilliWatts.ToKiloUnitString(units: "W")}")" />
+                            }
+                            else
+                            {
+                                <RangeInput TValue="uint" Min="@GpuInfo.MinimumPowerInPCM" Max="@GpuInfo.MaximumPowerInPCM" @bind-Value="OverclockSettings.PowerPCM" Id="powerLimitPercentage" Label="Power limit"
+                                            CustomLabelFunc='value => $"{OverclockSettings.PowerPCM.ToKiloUnitString(units: "%")}"'
+                                            SubLabel="@($"Min: {GpuInfo.MinimumPowerInPCM.ToKiloUnitString(units: "%")}, Max: {GpuInfo.MaximumPowerInPCM.ToKiloUnitString(units: "%")}")" />
+                            }
+                        }
+                    }
+
+                </form>
+            </div>
+            <div class="modal-footer">
+                @if (Preset == null)
+                {
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" @onclick="() => IsVisible = false">Close</button>
+                    <button type="button" class="btn btn-primary" data-bs-dismiss="modal" @onclick="ApplyClick">Apply</button>
+                }
+                else
+                {
+                    <button type="button" class="btn btn-secondary" data-bs-toggle="modal" data-bs-target="#presetModal" @onclick="() => IsVisible = false">Close</button>
+                    <button type="button" class="btn btn-primary" @onclick="ApplyClick">Save</button>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+
+    [Parameter]
+    public NvGpuOcSettings? OverclockSettings { get; set; }
+
+    [Parameter]
+    public NvGpuInfoDto? GpuInfo { get; set; }
+
+    private NvPreset? _preset;
+
+    [Parameter]
+    public NvPreset? Preset { get; set; }
+
+    [Parameter]
+    public Func<NvGpuInfoDto, Task>? AfterApply { get; set; }
+
+    private List<NvGpuInfoDto>? GpuInfos;
+
+    private bool IsVisible { get; set; }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (!IsVisible)
+        {
+            return;
+        }
+
+        if (_preset != Preset)
+        {
+            _preset = Preset;
+        }
+
+        if (GpuInfo == null)
+        {
+            GpuInfos = await _rpcClientService.CallAsync<List<NvGpuInfoDto>>("NvService", "GetGpuInfos");
+            GpuInfo = GpuInfos?.FirstOrDefault();
+        }
+
+        if (Preset != null)
+        {
+            OverclockSettings = Preset.ocSettings.FirstOrDefault();
+        }
+
+        if (GpuInfo != null && OverclockSettings == null)
+        {
+            OverclockSettings = GpuInfo.OverclockSettings;
+        }
+    }
+
+    private async Task ApplyClick(MouseEventArgs e)
+    {
+        if (OverclockSettings == null)
+        {
+            return;
+        }
+
+        if (Preset != null)
+        {
+            Preset.UpdateOverclockingSetting(OverclockSettings);
+
+            await jsHelper.CloseModal("gpuSettingsModal");
+            await jsHelper.OpenModal("presetModal");
+
+            return;
+        }
+
+        var result = await _rpcClientService.CallAsync<bool>("NvService", "ApplyOverclocking", new List<NvGpuOcSettings> { OverclockSettings });
+
+        if (AfterApply != null && GpuInfo != null)
+        {
+            await AfterApply.Invoke(GpuInfo);
+        }
+    }
+
+    private void OnFocus(FocusEventArgs e)
+    {
+        if (!IsVisible)
+        {
+            IsVisible = true;
+        }
+    }
+}

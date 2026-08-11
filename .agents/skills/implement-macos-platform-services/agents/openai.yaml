@@ -1,0 +1,4 @@
+interface:
+  display_name: "macOS platform services"
+  short_description: "Implement public macOS system integrations."
+  default_prompt: "Use $implement-macos-platform-services to map and implement a tested macOS system adapter."

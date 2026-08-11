@@ -1,0 +1,120 @@
+﻿@page "/info"
+
+@using ColorControl.Shared.Common;
+@using ColorControl.UI.Services;
+
+@rendermode Constants.RenderMode
+
+@inject RpcUiClientService _rpcClientService
+@inject NavigationManager _navigationManager;
+@inject IHttpContextAccessor _httpContextAccessor
+
+<PageTitle>Logging</PageTitle>
+
+<h1>Information</h1>
+
+@if (info == null)
+{
+    <div>Loading...</div>
+}
+else
+{
+    <h3 class="mb-2">@info.ApplicationTitle - @info.LegalCopyright</h3>
+    
+    <div class="d-flex align-items-baseline">
+        @if (IsUpdateInstalled)
+        {
+            if (IsEmbeddedBrowser)
+            {
+                <button type="button" class="btn btn-primary me-2" @onclick="RestartOnClick">Restart</button>
+            }
+            else
+            {
+                <button type="button" class="btn btn-primary me-2" @onclick="ReloadOnClick">Reload</button>
+            }
+            <span>New version @info.UpdateInfoDto.NewVersionNumber is installed. Click the button to restart the application.</span>
+        }
+        else
+        {
+            <button type="button" class="btn btn-primary me-2" disabled="@(!info.UpdateInfoDto.UpdateAvailable || IsInstallingUpdate)" @onclick="InstallUpdateOnClick">
+                @if (IsInstallingUpdate)
+                {
+                    <span class="spinner-border spinner-border-sm me-1" aria-hidden="true"></span>
+                }
+                <span role="status">Install update</span>
+            </button>
+            @if (info.UpdateInfoDto.UpdateAvailable)
+            {
+                <span>New version @info.UpdateInfoDto.NewVersionNumber available. Click the button to install the update.</span>
+            }
+            else
+            {
+                <span>You have the latest version</span>
+            }
+        }
+    </div>
+
+    <br/>
+    <h5>This app contains the following 3rd party plugins:</h5>
+    <ul class="list-group">
+        <li class="list-group-item">lgtv.net by gr4b4z</li>
+        <li class="list-group-item">Newtonsoft.Json by James Newton-King</li>
+        <li class="list-group-item">NLog by Jarek Kowalski, Kim Christensen, Julian Verdurmen</li>
+        <li class="list-group-item">NvAPIWrapper.Net by Soroush Falahati</li>
+        <li class="list-group-item">NWin32 by zmjack</li>
+        <li class="list-group-item">TaskScheduler by David Hall</li>
+        <li class="list-group-item">NVIDIA Profile Inspector by Orbmu2k</li>
+        <li class="list-group-item">NvidiaML wrapper by LibreHardwareMonitor</li>
+        <li class="list-group-item">Novideo sRGB by ledoge</li>
+        <li class="list-group-item">NLogViewer by dojo90</li>
+        <li class="list-group-item">WPFDarkTheme by AngryCarrot789</li>
+        <li class="list-group-item">Little-CMS by mm2</li>
+        <li class="list-group-item">MHC2 by dantmnf</li>
+    </ul>
+}
+
+@code {
+    private InfoDto? info;
+    private bool IsInstallingUpdate;
+    private bool IsUpdateInstalled;
+    private bool IsEmbeddedBrowser;
+
+    protected override async Task OnInitializedAsync()
+    {
+        info = await _rpcClientService.CallAsync<InfoDto>("OptionsService", "GetInfo");
+
+    }
+
+    private async Task InstallUpdateOnClick(MouseEventArgs e)
+    {
+        IsInstallingUpdate = true;
+        try
+        {
+            var result = await _rpcClientService.CallAsync<bool>("OptionsService", "InstallUpdate");
+
+            if (!result)
+            {
+                return;
+            }
+
+            IsUpdateInstalled = true;
+            IsEmbeddedBrowser = _httpContextAccessor.HttpContext?.Request.Headers["user-agent"].ToString().Contains("ColorControlEmbedded") == true;
+        }
+        finally
+        {
+            IsInstallingUpdate = false;
+        }
+    }
+
+    private async Task RestartOnClick(MouseEventArgs e)
+    {
+        var result = await _rpcClientService.CallAsync<bool>("OptionsService", "RestartAfterUpdate");
+    }
+
+    private async Task ReloadOnClick(MouseEventArgs e)
+    {
+        var result = await _rpcClientService.CallAsync<bool>("OptionsService", "RestartAfterUpdate");
+
+        _navigationManager.Refresh();
+    }
+}

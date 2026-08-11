@@ -1,0 +1,4 @@
+interface:
+  display_name: "Feature parity verification"
+  short_description: "Audit source-to-test migration parity."
+  default_prompt: "Use $verify-feature-parity to audit this migration milestone for silent feature loss."

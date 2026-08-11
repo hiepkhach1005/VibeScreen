@@ -1,0 +1,373 @@
+﻿@page "/options"
+
+@using ColorControl.Shared.Contracts
+@using ColorControl.UI.Services;
+@using ColorControl.Shared.Common;
+@using ColorControl.UI.Components.Pages.Generic
+
+@rendermode Constants.RenderMode
+
+@inject RpcUiClientService _rpcClientService
+@inject AppState AppState
+@inject NavigationManager _navigationManager
+@inject NotificationService _notificationService
+@inject JSHelper _jsHelper;
+@inject IHttpContextAccessor _httpContextAccessor
+
+<PageTitle>Options</PageTitle>
+
+<h1>Options</h1>
+
+@if (config == null)
+{
+    <div>Loading...</div>
+}
+else
+{
+    <div class="row">
+        <div class="col-lg-6 mb-3">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h5 class="card-title">General</h5>
+                    <form>
+                        <div class="mb-3 form-check">
+                            <input class="form-check-input" type="checkbox" @bind="config.AutoStart" id="startAfterLogin" @oninput="StartAfterLoginInput">
+                            <label class="form-check-label" for="startAfterLogin">
+                                Automatically start after login
+                            </label>
+                        </div>
+                        <div class="mb-3 form-check">
+                            <input class="form-check-input" type="checkbox" @bind="config.CheckForUpdates" id="checkForUpdates" @oninput="CheckForUpdatesInput">
+                            <label class="form-check-label" for="checkForUpdates">
+                                Automatically check for updates
+                            </label>
+                        </div>
+                        <div class="mb-3 form-check">
+                            <input class="form-check-input" type="checkbox" @bind="config.AutoInstallUpdates" id="autoInstallUpdates" @oninput="AutoInstallUpdatesInput">
+                            <label class="form-check-label" for="autoInstallUpdates">
+                                Automatically install updates
+                            </label>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label" for="elevationMethod">
+                                Elevation Method
+                            </label>
+                            <select class="form-select" @bind="config.ElevationMethod" id="elevationMethod" @oninput="ElevationMethodInput" aria-describedby="elevationMethodHelp">
+                                @foreach (var method in Enum.GetValues<ElevationMethod>())
+                                {
+                                    <option value="@method">@method.GetDescription()</option>
+                                }
+                            </select>
+                            <div id="elevationMethodHelp" class="form-text">
+                                Elevation is needed in some cases where ColorControl needs administrator rights.
+                                Some operations like installing a service, changing the priority of a process or creating a temporary IP-route for improved WOL-functionality will not work without those rights.
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-6 mb-3">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h5 class="card-title">UI-settings</h5>
+                    <form>
+                        <div class="mb-2">
+                            <label class="form-label" for="uiType">Default UI</label>
+                            <select class="form-select" id="uiType" @bind="config.UiType" @oninput="UiTypeOnInput">
+                                @foreach (var type in Enum.GetValues<UiType>())
+                                {
+                                    <option value="@type.ToString()">@type.GetDescription()</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label" for="webUiPort">
+                                Web UI port (use 0 for automatic assignment)
+                            </label>
+                            @if (IsChangingUiPort)
+                            {
+                                <div class="alert alert-warning mb-2" role="alert">
+                                    Changing the UI port. If the UI is not reloaded correctly, close this window and relaunch the UI.
+                                </div>
+                            }
+                            <input class="form-control" type="number" @bind="config.UiPort" id="webUiPort" @bind:after="UiPortBlur">
+                            @if (config.CurrentUiPort > 0)
+                            {
+                                <div id="uiPortHelp" class="form-text">Currently listening on port @config.CurrentUiPort</div>
+                            }
+                        </div>
+                        <div class="mb-3 form-check">
+                            <input class="form-check-input" type="checkbox" @bind="config.UiAllowRemoteConnections" id="uiAllowRemoteConnections" @bind:after="UiAllowRemoteConnectionsChange">
+                            <label class="form-check-label" for="uiAllowRemoteConnections">
+                                Web UI: Allow remote connections
+                            </label>
+                            <div id="uiAllowRemoteConnectionsHelp" class="form-text">Allows or disallows remote connections to the UI. Only enable this if you want to access the UI from another device (eg. your phone) than the system ColorControl is running on</div>
+                        </div>
+                        <div class="mb-3 form-check">
+                            <input class="form-check-input" type="checkbox" @bind="config.MinimizeOnClose" id="minimizeOnClose" @oninput="MinimizeOnCloseInput">
+                            <label class="form-check-label" for="minimizeOnClose">
+                                Minimize on close
+                            </label>
+                        </div>
+                        <div class="mb-3 form-check">
+                            <input class="form-check-input" type="checkbox" @bind="config.StartMinimized" id="startMinimized" @oninput="StartMinimizedInput">
+                            <label class="form-check-label" for="startMinimized">
+                                Start minimized
+                            </label>
+                        </div>
+                        <div class="mb-3 form-check">
+                            <input class="form-check-input" type="checkbox" @bind="config.MinimizeToTray" id="minimizeToTray" @oninput="MinimizeToTrayInput">
+                            <label class="form-check-label" for="minimizeToTray">
+                                Minimize to system tray
+                            </label>
+                        </div>
+                        <div class="mb-3 form-check">
+                            <input class="form-check-input" type="checkbox" @bind="config.UseDarkMode" id="useDarkMode" @oninput="UseDarkModeInput">
+                            <label class="form-check-label" for="useDarkMode">
+                                Dark Mode
+                            </label>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-6 mb-3">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h5 class="card-title">Modules</h5>
+                    <form>
+                        @foreach (var module in config.Modules)
+                        {
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" role="switch" id="@("module_" + module.DisplayName)" @bind="module.IsActive" @oninput="(ChangeEventArgs e) => ModuleOnInput(module, e)">
+                                <label class="form-check-label" for="@("module_" + module.DisplayName)">@module.DisplayName</label>
+                            </div>
+                        }
+                    </form>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-6 mb-3">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h5 class="card-title">Advanced</h5>
+                    <form>
+                        <RangeInput TValue="int" Min="50" Max="10000" Step="50" @bind-Value="config.ProcessMonitorPollingInterval" Id="processMonitorPollingInterval" Label="Polling interval of process monitor" Unit=" milliseconds"
+                            SubLabel="Decreasing this delay may execute triggered presets sooner but can cause a higher CPU load"
+                        />
+                        <div class="mb-3 form-check">
+                            <input class="form-check-input" type="checkbox" @bind="config.UseRawInput" id="useRawInput" aria-describedby="useRawInputHelp" @oninput="UseRawInputInput">
+                            <label class="form-check-label" for="useRawInput">
+                                Use Raw Input for shortcuts (hot keys)
+                            </label>
+                            <div id="useRawInputHelp" class="form-text">This enables shortcuts to work during applications/games that block certain keys (like WinKey or Control). NOTE: if the application in the foreground runs with higher privileges than ColorControl, Raw Input does not work and normal hot keys are used</div>
+                        </div>
+                        <div class="mb-3 form-check">
+                            <input class="form-check-input" type="checkbox" @bind="config.SetMinTmlAndMaxTml" id="setMinTmlAndMaxTml" @oninput="SetMinMaxTmlInput">
+                            <label class="form-check-label" for="setMinTmlAndMaxTml">
+                                Set MinTML and MaxTML when applying color profiles
+                            </label>
+                        </div>
+                        <div class="mb-3 form-check">
+                            <input class="form-check-input" type="checkbox" @bind="config.DisableErrorPopupWhenApplyingPreset" id="disableErrorPopupWhenApplyingPreset" @oninput="DisableErrorPopupInput">
+                            <label class="form-check-label" for="disableErrorPopupWhenApplyingPreset">
+                                Disable error popup when applying presets
+                            </label>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-6 mb-3">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h5 class="card-title">Miscellaneous</h5>
+                    <form>
+                        <div class="mb-3 form-check">
+                            <input class="form-check-input" type="checkbox" @bind="config.FixChromeFonts" id="fixChromeFonts" aria-describedby="fixChromeFontsHelp" @bind:after="FixChromeFontsInput">
+                            <label class="form-check-label" for="fixChromeFonts">
+                                ClearType: fix the bad fonts in Chrome when using a monitor with a different pixel structure
+                            </label>
+                            <div id="fixChromeFontsHelp" class="form-text">This will add the parameter --disable-lcd-text to Chrome which enables grayscale anti-aliasing</div>
+                        </div>
+                        <ShortcutInput Label="Shortcut to start the blank screensaver" @bind-Shortcut="config.ScreenSaverShortcut" @bind-Shortcut:after="UpdateScreenSaverShortcut" />
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+
+@code {
+    private Config? config;
+    private bool IsEmbeddedBrowser;
+    private bool IsChangingUiPort;
+
+    protected override async Task OnInitializedAsync()
+    {
+        config = await _rpcClientService.CallAsync<Config>("OptionsService", "GetConfig");
+        IsEmbeddedBrowser = _httpContextAccessor.HttpContext?.Request.Headers["user-agent"].ToString().Contains("ColorControlEmbedded") == true;
+    }
+
+    private async Task SaveConfig()
+    {
+        await _rpcClientService.CallAsync<bool>("OptionsService", "SetConfig", config);
+    }
+
+    private async Task UseDarkModeInput(ChangeEventArgs e)
+    {
+        var value = e.Value != null ? (bool)e.Value : false;
+        var result = await UpdateBoolSetting("SetDarkMode", e);
+
+        if (result)
+        {
+            AppState.SetTheme(value ? "dark" : "light");
+            //ThemeTransitionName = AppState.SelectedTheme == "light" ? "Dark theme" : "Light theme";
+            _navigationManager.Refresh();
+        }
+    }
+
+    private async Task StartAfterLoginInput(ChangeEventArgs e)
+    {
+        await UpdateBoolSetting("SetStartAfterLogin", e);
+    }
+
+    private async Task MinimizeOnCloseInput(ChangeEventArgs e)
+    {
+        await UpdateBoolSetting("SetMinimizeOnClose", e);
+    }
+
+    private async Task StartMinimizedInput(ChangeEventArgs e)
+    {
+        await UpdateBoolSetting("SetStartMinimized", e);
+    }
+
+    private async Task MinimizeToTrayInput(ChangeEventArgs e)
+    {
+        await UpdateBoolSetting("SetMinimizeToTray", e);
+    }
+
+    private async Task CheckForUpdatesInput(ChangeEventArgs e)
+    {
+        await UpdateBoolSetting("SetCheckForUpdates", e);
+    }
+
+    private async Task AutoInstallUpdatesInput(ChangeEventArgs e)
+    {
+        await UpdateBoolSetting("SetAutoInstallUpdates", e);
+    }
+
+    private async Task ModuleOnInput(Module module, ChangeEventArgs e)
+    {
+        module.IsActive = e.Value != null ? (bool)e.Value : false;
+
+        var result = await _rpcClientService.CallAsync<bool>("OptionsService", "UpdateModule", module);
+
+        if (result)
+        {
+            _navigationManager.NavigateTo("/options", true);
+        }
+        else if (module.IsActive)
+        {
+            _notificationService.SendNotification(new NotificationDto("Cannot activate the module: check the log for more info", Constants.Danger) { InternalUrl = "/logging" });
+            module.IsActive = false;
+        }
+    }
+
+    private async Task PollingIntervalOnInput()
+    {
+        await _rpcClientService.CallAsync<bool>("OptionsService", "SetProcessMonitorPollingInterval", config!.ProcessMonitorPollingInterval);
+    }
+
+    private async Task UseRawInputInput(ChangeEventArgs e)
+    {
+        await UpdateBoolSetting("SetUseRawInput", e);
+    }
+
+    private async Task SetMinMaxTmlInput(ChangeEventArgs e)
+    {
+        await UpdateBoolSetting("SetMinTmlAndMaxTml", e);
+    }
+
+    private async Task DisableErrorPopupInput(ChangeEventArgs e)
+    {
+        await UpdateBoolSetting("SetDisableErrorPopupWhenApplyingPreset", e);
+    }
+
+    private async Task FixChromeFontsInput()
+    {
+        await UpdateBoolSetting2("SetFixChromeFonts", config!.FixChromeFonts);
+    }
+
+    private async Task UpdateScreenSaverShortcut()
+    {
+        await _rpcClientService.CallAsync<bool>("OptionsService", "SetScreenSaverShortcut", config!.ScreenSaverShortcut);
+    }
+
+    private async Task<bool> UpdateBoolSetting(string method, ChangeEventArgs e)
+    {
+        var value = e.Value != null ? (bool)e.Value : false;
+        return await UpdateBoolSetting2(method, value);
+    }
+
+    private async Task<bool> UpdateBoolSetting2(string method, bool value)
+    {
+        return await _rpcClientService.CallAsync<bool>("OptionsService", method, value);
+    }
+
+    private async Task ElevationMethodInput(ChangeEventArgs e)
+    {
+        var value = e.Value != null ? Enum.Parse<ElevationMethod>((string)e.Value) : ElevationMethod.None;
+        await _rpcClientService.CallAsync<bool>("OptionsService", "SetElevationMethod", value);
+    }
+
+    private async Task UiTypeOnInput(ChangeEventArgs e)
+    {
+        if (Enum.TryParse<UiType>(e.Value?.ToString(), out var uiType))
+        {
+            await _rpcClientService.CallAsync<bool>("OptionsService", "SetUiType", uiType);
+
+            config!.UiType = uiType;
+        }
+    }
+
+    private async Task UiPortBlur()
+    {
+        if (config == null)
+        {
+            return;
+        }
+
+        IsChangingUiPort = true;
+
+        if (config.UiPort > 0 || IsEmbeddedBrowser)
+        {
+            await NavigateToNewPort(config.UiPort, 5000);
+        }
+
+        var result = await _rpcClientService.CallAsync<bool>("OptionsService", "SetUiPort", config.UiPort);
+    }
+
+    private async Task UiAllowRemoteConnectionsChange()
+    {
+        await _rpcClientService.CallAsync<bool>("OptionsService", "SetUiAllowRemoteConnections", config!.UiAllowRemoteConnections);
+    }
+
+    private async Task NavigateToNewPort(int port, int timeout = 0)
+    {
+        var uri = new UriBuilder(_navigationManager.Uri);
+        uri.Port = port;
+        var newUri = uri.Uri.ToString();
+
+        if (timeout == 0)
+        {
+            _navigationManager.NavigateTo(uri.ToString(), true);
+        }
+        else
+        {
+            await _jsHelper.NavigateTo(newUri, timeout);
+        }
+    }
+}

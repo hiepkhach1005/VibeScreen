@@ -1,0 +1,69 @@
+{
+  "type": "register",
+  "id": "register_0",
+  "payload": {
+    "forcePairing": false,
+    "pairingType": "PROMPT",
+    "client-key": "CLIENTKEYGOESHERE",
+    "manifest": {
+      "manifestVersion": 1,
+      "appVersion": "1.0",
+      "signed": {
+        "appId": "com.colorcontrol.app",
+        "created": "20260426",
+        "localizedAppNames": {
+          "": "ColorControl"
+        },
+        "localizedVendorNames": {
+          "": "ColorControl"
+        },
+        "permissions": [
+          "CONTROL_POWER",
+          "READ_POWER_STATE",
+          "READ_CURRENT_CHANNEL",
+          "READ_RUNNING_APPS",
+          "READ_NETWORK_STATE",
+          "READ_INPUT_DEVICE_LIST",
+          "READ_TV_CHANNEL_LIST",
+          "READ_SETTINGS",
+          "READ_COUNTRY_INFO",
+          "WRITE_NOTIFICATION_TOAST",
+          "CONTROL_AUDIO",
+          "CONTROL_DISPLAY",
+          "CONTROL_INPUT_JOYSTICK",
+          "CONTROL_INPUT_MEDIA_PLAYBACK",
+          "CONTROL_INPUT_TV",
+          "CONTROL_TV_SCREEN",
+          "LAUNCH",
+          "LAUNCH_WEBAPP",
+          "APP_TO_APP",
+          "CLOSE"
+        ],
+        "serial": "colorcontrol-webos26"
+      },
+      "permissions": [
+        "LAUNCH",
+        "LAUNCH_WEBAPP",
+        "APP_TO_APP",
+        "CLOSE",
+        "CONTROL_AUDIO",
+        "CONTROL_DISPLAY",
+        "CONTROL_INPUT_JOYSTICK",
+        "CONTROL_INPUT_MEDIA_PLAYBACK",
+        "CONTROL_INPUT_TV",
+        "CONTROL_POWER",
+        "CONTROL_TV_SCREEN",
+        "READ_APP_STATUS",
+        "READ_CURRENT_CHANNEL",
+        "READ_INPUT_DEVICE_LIST",
+        "READ_NETWORK_STATE",
+        "READ_RUNNING_APPS",
+        "READ_TV_CHANNEL_LIST",
+        "WRITE_NOTIFICATION_TOAST",
+        "READ_POWER_STATE",
+        "READ_COUNTRY_INFO",
+        "READ_SETTINGS"
+      ]
+    }
+  }
+}

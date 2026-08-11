@@ -1,0 +1,4 @@
+interface:
+  display_name: "ColorControl native core"
+  short_description: "Build native domain and automation services."
+  default_prompt: "Use $build-colorcontrol-core to implement a tested native domain or automation workflow."

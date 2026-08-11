@@ -1,0 +1,4 @@
+interface:
+  display_name: "macOS Liquid Glass UI"
+  short_description: "Design native, accessible Liquid Glass layouts."
+  default_prompt: "Use $build-macos-liquid-glass-ui to design and verify a native ColorControl macOS interface."

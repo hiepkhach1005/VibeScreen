@@ -1,0 +1,435 @@
+﻿@page "/NVIDIA"
+
+@using ColorControl.Shared.Contracts
+@using ColorControl.Shared.Contracts.NVIDIA
+@using ColorControl.UI.Pages.Generic
+@using ColorControl.UI.Services;
+@using ColorControl.UI.Components.Pages.Generic
+@using ColorControl.Shared.Common;
+@using ColorControl.UI.Generics
+@using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage
+@inherits SummaryComponentBase
+
+@rendermode Constants.RenderMode
+
+@inject RpcUiClientService _rpcClientService
+@inject ProtectedLocalStorage _localStorage
+
+<PageTitle>NVIDIA controller</PageTitle>
+
+<NvidiaSettings />
+<NvidiaDithering Visible="DitheringVisible" />
+<NvidiaDriverSettings Preset="CurrentDriverSettingsPreset" />
+<NvidiaGpuSettings Preset="CurrentGpuSettingsPreset" GpuInfo="CurrentGpuInfo" />
+<NvidiaInfo Visible="InfoVisible" />
+
+<div class="d-flex align-items-center">
+	<h1>NVIDIA controller</h1>
+	<div class="d-flex ms-auto">
+		<div class="btn-group">
+			<button type="button" class="btn btn-sm btn-primary dropdown-toggle me-2" data-bs-toggle="dropdown" aria-expanded="false">
+				Tools
+			</button>
+			<ul class="dropdown-menu">
+				<li><a class="dropdown-item" data-bs-toggle="modal" data-bs-target="#ditheringModal" @onclick="() => DitheringVisible = true">Test dithering</a></li>
+				<li><a class="dropdown-item" data-bs-toggle="modal" data-bs-target="#driverSettingsModal" @onclick="() => CurrentDriverSettingsPreset = null">Driver settings</a></li>
+				<li><a class="dropdown-item" data-bs-toggle="modal" data-bs-target="#infoModal" @onclick="() => InfoVisible = true">Info</a></li>
+			</ul>
+		</div>
+		<button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#settingsModal">
+			Settings
+		</button>
+	</div>
+</div>
+
+<h2>Displays</h2>
+
+<NvidiaPreset PresetParam="CurrentPreset" AfterApply="AfterPresetApplied" SetDriverSettingsPreset="SetDriverSettingsPreset" SetGpuSettingsPreset="SetGpuSettingsPreset" />
+<ConfirmModal Title="Delete preset" Message="Are you sure you want to delete the preset?" OnConfirm="PresetOnDeleteConfirmed" />
+
+@if (DisplayPresets == null)
+{
+	<div>Loading...</div>
+}
+else
+{
+	<div class="row mb-3">
+		@if (!DisplayPresets.Any())
+		{
+			<span>No displays found</span>
+		}
+		@foreach (var preset in DisplayPresets)
+		{
+			<div class="col-lg-6 mb-3">
+				<div class="card h-100">
+					<div class="card-header d-flex align-items-baseline">
+						<span>
+							@preset.displayName
+							@if (preset.DisplayConfig.IsPrimary == true)
+							{
+								<span class="ms-2 badge text-bg-primary" title="Primary display">Primary</span>
+							}
+						</span>
+						<div class="d-flex ms-auto">
+							<button type="button" class="btn btn-sm btn-primary ms-2" data-bs-toggle="modal" data-bs-target="#presetModal" @onclick="() => DisplayPresetOnClick(preset)">
+								Settings
+							</button>
+						</div>
+					</div>
+					<div class="card-body">
+						<small class="text-body">@preset.DisplayConfig.Resolution.ToString() @@ @preset.DisplayConfig.RefreshRate.ToString()Hz</small>
+						<small class="text-muted">@preset.colorData</small>
+						<small class="text-muted">Scale: @preset.DpiScaling.ToString()</small>
+						@if (preset.DitherState != NvDitherState.Auto)
+						{
+							<br />
+							<small class="text-body">Dithering: @preset.DitherState.GetDescription() @preset.NvDitherBits.GetDescription() @preset.NvDitherMode.GetDescription()</small>
+						}
+						@if (preset.HDREnabled)
+						{
+							<br />
+							<small class="text-body">HDR enabled @(preset.HdrSettings.OutputMode.HasValue ? $"({preset.HdrSettings.DisplayOutputMode.GetDescription()})" : ""), SDR brightness: @preset.SDRBrightness%</small>
+						}
+						@if (!string.IsNullOrEmpty(preset.ColorProfileSettings.ProfileName))
+						{
+							<br />
+							<small class="text-body">Color profile: @preset.ColorProfileSettings.ProfileName</small>
+						}
+						@if (preset.driverSettings?.Any() == true)
+						{
+							<br />
+							@RenderPresetSettings(preset)
+						}
+					</div>
+				</div>
+			</div>
+		}
+	</div>
+}
+
+<h2>Display Adapters</h2>
+
+@if (GpuInfos == null)
+{
+	<div>Loading...</div>
+}
+else
+{
+	<div class="row mb-3">
+		@if (!GpuInfos.Any())
+		{
+			<span>No display adapters found</span>
+		}
+		@foreach (var gpuInfo in GpuInfos)
+		{
+			<div class="col-lg-6 mb-3">
+				<div class="card h-100">
+					<div class="card-header d-flex align-items-baseline">
+						<span>
+							@gpuInfo.Name
+						</span>
+						@if (NvConfig?.ShowOverclocking == true)
+						{
+							<div class="d-flex ms-auto">
+								<button type="button" class="btn btn-sm btn-primary ms-2" data-bs-toggle="modal" data-bs-target="#gpuSettingsModal" @onclick="() => GpuSettingsOnClick(gpuInfo)">
+									Settings
+								</button>
+							</div>
+						}
+					</div>
+					<div class="card-body">
+						<small class="text-body">GPU: @gpuInfo.GpuFrequencyInKhz.ToKiloUnitString() @@ @gpuInfo.VoltageInMv mV, @Utils.ToUnitString(values: [gpuInfo.GpuTemperature, gpuInfo.HotSpotTemperature])</small>
+						<small class="text-body">Memory: @gpuInfo.GpuFrequencyInKhz.ToKiloUnitString(), @Utils.ToUnitString(values: [gpuInfo.MemoryTemperature])</small>
+						<small class="text-body">Power: @(gpuInfo.PowerInWatts)W</small>
+						<small class="text-body"><br/>Overclock info: @gpuInfo.OverclockSettings</small>
+					</div>
+				</div>
+			</div>
+		}
+	</div>
+}
+
+@if (Presets == null)
+{
+	<div>Loading...</div>
+}
+else
+{
+	<div class="mb-2 d-flex align-items-center">
+		<h2>Presets</h2>
+		<div class="d-flex ms-auto">
+			<select class="form-select me-2" id="presetOrder" @bind="PresetOrder" @bind:after="PresetOrderChanged">
+				@foreach (var order in Enum.GetValues<PresetOrder>())
+				{
+					<option value="@order">Order by: @order.GetDescription()</option>
+				}
+			</select>
+			<button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#presetModal" @onclick="() => AddPresetOnClick()">
+				Add
+			</button>
+		</div>
+	</div>
+	<div class="row mb-3">
+		<div class="col">
+			@if (!Presets.Any())
+			{
+				<span>No presets found</span>
+			}
+			<div class="list-group">
+				@foreach (var preset in Presets)
+				{
+					<span class="list-group-item list-group-item-action" @onclick="() => PresetOnClick(preset)" @onclick:preventDefault @onclick:stopPropagation>
+						<div class="d-flex align-items-start justify-content-between">
+							<div>
+								<h5 class="mb-1">
+									@preset.name <small class="text-muted">@(preset.primaryDisplay ? "Primary display" : preset.displayName)</small>
+									@if (preset.ShowInQuickAccess)
+									{
+										<span class="ms-2 badge text-bg-warning" title="Show in Quick Access">QA</span>
+									}
+								</h5>
+							</div>
+							<span class="d-none d-lg-block">
+								<button class="btn btn-danger btn-sm" data-bs-toggle="modal" data-bs-target="#confirmModal" @onclick="() => PresetOnDeleteClick(preset)" @onclick:preventDefault @onclick:stopPropagation>Delete</button>
+								<button class="btn btn-secondary btn-sm" data-bs-toggle="modal" data-bs-target="#presetModal" @onclick="() => PresetOnCloneClick(preset)" @onclick:preventDefault @onclick:stopPropagation>Clone</button>
+								<button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#presetModal" @onclick="() => PresetOnEditClick(preset)" @onclick:preventDefault @onclick:stopPropagation>Edit</button>
+							</span>
+							<div class="d-lg-none" @onclick:preventDefault @onclick:stopPropagation>
+								<button type="button" class="btn btn-sm btn-outline-secondary" data-bs-toggle="dropdown" aria-expanded="false">
+									<i class="bi bi-three-dots-vertical"></i>
+								</button>
+								<ul class="dropdown-menu">
+									<li><a class="dropdown-item" data-bs-toggle="modal" data-bs-target="#confirmModal" @onclick="() => PresetOnDeleteClick(preset)">Delete</a></li>
+									<li><a class="dropdown-item" data-bs-toggle="modal" data-bs-target="#presetModal" @onclick="() => PresetOnCloneClick(preset)">Clone</a></li>
+									<li><a class="dropdown-item" data-bs-toggle="modal" data-bs-target="#presetModal" @onclick="() => PresetOnEditClick(preset)">Edit</a></li>
+								</ul>
+							</div>
+						</div>
+						<small>
+							<ul class="list-group list-group-horizontal-md mb-1">
+								@if (preset.DisplayConfig.ApplyResolution || preset.DisplayConfig.ApplyRefreshRate)
+								{
+									<li class="list-group-item p-1">@preset.DisplayConfig.Resolution.ToString() @@ @preset.DisplayConfig.RefreshRate.ToString()Hz</li>
+								}
+								@if (preset.applyColorData)
+								{
+									<li class="list-group-item p-1">Color settings: @preset.colorData</li>
+								}
+								@if (preset.applyDithering)
+								{
+									<li class="list-group-item p-1">Dithering: @preset.GetDitheringDescription()</li>
+								}
+								@if (preset.ApplyColorEnhancements)
+								{
+									<li class="list-group-item p-1">@preset.ColorEnhancementSettings</li>
+								}
+								@if (preset.applyHDR)
+								{
+									<li class="list-group-item p-1">HDR: @preset.GetHdrDescription()</li>
+								}
+								@if (preset.applyDriverSettings)
+								{
+									<li class="list-group-item p-1">@RenderPresetSettings(preset)</li>
+								}
+								@if (preset.ApplyNovideoSettings)
+								{
+									<li class="list-group-item p-1">@preset.NovideoSettings</li>
+								}
+								@if (preset.applyHdmiSettings)
+								{
+									<li class="list-group-item p-1">@preset.GetHdmiSettingsDescription()</li>
+								}
+								@if (preset.applyOverclocking)
+								{
+									<li class="list-group-item p-1">@preset.GetOverclockingSettingsDescription()</li>
+								}
+								@if (preset.applyOther && !string.IsNullOrEmpty(preset.ColorProfileSettings.ProfileName))
+								{
+									<li class="list-group-item p-1">Color profile: @preset.ColorProfileSettings.ProfileName</li>
+								}
+								@if (preset.DdcSettings.ApplyDdc && preset.DdcSettings.Settings.Count > 0)
+								{
+									<li class="list-group-item p-1">DDC: @preset.DdcSettings.Settings[0]</li>
+								}
+							</ul>
+						</small>
+						<small class="text-muted">@preset.shortcut</small>
+					</span>
+				}
+			</div>
+		</div>
+	</div>
+}
+
+@code {
+	private List<NvPreset>? Presets;
+	private List<NvPreset>? DisplayPresets;
+	private List<NvGpuInfoDto>? GpuInfos;
+	private NvServiceConfig? NvConfig;
+
+	private NvPreset? CurrentPreset;
+	private NvPreset? CurrentDriverSettingsPreset;
+	private NvPreset? CurrentGpuSettingsPreset;
+	private NvGpuInfoDto? CurrentGpuInfo;
+	private bool DitheringVisible;
+	private bool InfoVisible;
+	private List<NvSettingItemDto>? DriverSettings;
+
+	private PresetOrder PresetOrder;
+
+	protected override async Task OnInitializedAsync()
+	{
+		await base.OnInitializedAsync();
+
+		await Refresh();
+	}
+
+	protected override async Task Refresh()
+	{
+		NvConfig = await _rpcClientService.CallAsync<NvServiceConfig>("NvService", "GetConfig");
+		await RefreshPresets();
+		DisplayPresets = await _rpcClientService.CallAsync<List<NvPreset>>("NvService", "GetDisplayPresets");
+		GpuInfos = await _rpcClientService.CallAsync<List<NvGpuInfoDto>>("NvService", "GetGpuInfos");
+	}
+
+	protected override async Task OnAfterRenderAsync(bool firstTime)
+	{
+		if (firstTime)
+		{
+			PresetOrder = await _localStorage.TryGet<PresetOrder>("NvidiaPresetOrder");
+			Presets = Presets?.OrderPresetsBy(PresetOrder);
+
+			StateHasChanged();
+		}
+	}
+
+	RenderFragment<NvPreset> RenderPresetSettings => preset =>
+		@<div class="dropdown">
+			<span role="button" class="text-decoration-underline dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false" data-bs-auto-close="outside" @onclick="() => DriverSettingsOnClick(preset)" @onclick:preventDefault @onclick:stopPropagation>
+				<small>@preset.driverSettings.Count() driver settings changed</small>
+			</span>
+			<form class="dropdown-menu" style="width: max-content">
+				@if (DriverSettings != null)
+				{
+					<ul class="list-group p-0">
+						@foreach (var settingId in preset.driverSettings.Keys)
+						{
+							var setting = DriverSettings.FirstOrDefault(s => s.SettingId == settingId);
+							if (setting == null)
+							{
+								continue;
+							}
+							var settingValue = setting.Values.FirstOrDefault(v => v.Value == preset.driverSettings[settingId]);
+							if (settingValue == null) {
+								continue;
+							}
+
+							<li class="list-group-item py-0 px-1"><small>@setting.Name: @settingValue.ValueName</small></li>
+						}
+					</ul>
+				}
+			</form>
+		</div>
+	;
+
+	private async Task PresetOnClick(NvPreset preset)
+	{
+		var result = await _rpcClientService.CallAsync<bool>("NvService", "ApplyPresetWithId", preset.id);
+		if (result)
+		{
+			DisplayPresets = await _rpcClientService.CallAsync<List<NvPreset>>("NvService", "GetDisplayPresets");
+		}
+	}
+
+	private void PresetOnEditClick(NvPreset preset)
+	{
+		CurrentPreset = preset;
+	}
+
+	private void PresetOnCloneClick(NvPreset preset)
+	{
+		CurrentPreset = new NvPreset(preset);
+		CurrentPreset.name = preset.name;
+		CurrentPreset.SetCloneValues();
+	}
+
+	private void PresetOnDeleteClick(NvPreset preset)
+	{
+		CurrentPreset = preset;
+	}
+
+	private async Task PresetOnDeleteConfirmed()
+	{
+		if (CurrentPreset == null)
+		{
+			return;
+		}
+
+		await _rpcClientService.CallAsync<bool>("NvService", "DeletePreset", CurrentPreset.id);
+		await RefreshPresets();
+		StateHasChanged();
+	}
+
+	private void DisplayPresetOnClick(NvPreset preset)
+	{
+		CurrentPreset = preset;
+	}
+
+	private void AddPresetOnClick()
+	{
+		CurrentPreset = new NvPreset();
+	}
+
+	private async Task AfterPresetApplied(NvPreset preset)
+	{
+		if (preset.IsDisplayPreset)
+		{
+			DisplayPresets = await _rpcClientService.CallAsync<List<NvPreset>>("NvService", "GetDisplayPresets");
+		}
+		else
+		{
+			await RefreshPresets();
+		}
+		StateHasChanged();
+	}
+
+	private Task SetDriverSettingsPreset(NvPreset preset)
+	{
+		CurrentDriverSettingsPreset = preset;
+		StateHasChanged();
+
+		return Task.CompletedTask;
+	}
+
+	private Task SetGpuSettingsPreset(NvPreset preset)
+	{
+		CurrentGpuSettingsPreset = preset;
+		StateHasChanged();
+
+		return Task.CompletedTask;
+	}
+
+	private void GpuSettingsOnClick(NvGpuInfoDto gpuInfo)
+	{
+		CurrentGpuInfo = gpuInfo;
+		CurrentGpuSettingsPreset = null;
+	}
+
+	private async Task PresetOrderChanged()
+	{
+		await _localStorage.SetAsync("NvidiaPresetOrder", PresetOrder);
+		await RefreshPresets();
+	}
+
+	private async Task RefreshPresets()
+	{
+		Presets = await _rpcClientService.CallAsync<List<NvPreset>>("NvService", "GetPresets");
+
+		Presets = Presets?.OrderPresetsBy(PresetOrder);
+	}
+
+	private async Task DriverSettingsOnClick(NvPreset preset)
+	{
+		DriverSettings ??= await _rpcClientService.CallAsync<List<NvSettingItemDto>>("NvService", "GetDriverSettings", Type.Missing, true);
+	}
+}

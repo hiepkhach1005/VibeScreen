@@ -1,0 +1,140 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+		<TargetFramework>net10.0-windows</TargetFramework>
+		<OutputType>WinExe</OutputType>
+		<IsWebBootstrapper>false</IsWebBootstrapper>
+		<PublishUrl>publish\</PublishUrl>
+		<Install>true</Install>
+		<InstallFrom>Disk</InstallFrom>
+		<MapFileExtensions>false</MapFileExtensions>
+		<ProductName>ColorControl</ProductName>
+		<PublisherName>Maassoft</PublisherName>
+		<Company>Maassoft</Company> 
+		<ApplicationRevision>0</ApplicationRevision>
+		<ApplicationVersion>11.0.0.0</ApplicationVersion>
+		<Version>11.0.0.0</Version>
+		<UseApplicationTrust>false</UseApplicationTrust>
+		<PublishWizardCompleted>true</PublishWizardCompleted>
+		<BootstrapperEnabled>false</BootstrapperEnabled>
+		<GenerateAssemblyInfo>true</GenerateAssemblyInfo>
+		<UseWindowsForms>true</UseWindowsForms>
+		<UseWPF>false</UseWPF>
+		<ImportWindowsDesktopTargets>true</ImportWindowsDesktopTargets>
+		<ApplicationIcon>Resources\pngbarn.ico</ApplicationIcon>
+		<Copyright>2020-2025 Maassoft</Copyright>
+		<Authors>Maassoft</Authors>
+		<IncludeSourceRevisionInInformationalVersion>false</IncludeSourceRevisionInInformationalVersion>
+		<ResolveAssemblyWarnOrErrorOnTargetArchitectureMismatch>None</ResolveAssemblyWarnOrErrorOnTargetArchitectureMismatch>
+	</PropertyGroup>
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">
+		<OutputPath>bin\x64\Debug\</OutputPath>
+		<CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+	</PropertyGroup>
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">
+		<OutputPath>bin\x64\Release\</OutputPath>
+		<CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+	</PropertyGroup>
+	<PropertyGroup>
+		<PathMap Condition="'$(Configuration)' == 'Release'">$(MSBuildThisFileDirectory)=.\</PathMap>
+		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+	</PropertyGroup>
+	<ItemGroup>
+		<None Remove="Resources\LgRemotes.json" />
+		<None Remove="Resources\SamsungRemotes.json" />
+		<None Remove="XForms\BrowserWindow.xaml" />
+		<None Remove="XForms\ColorProfileWindow.xaml" />
+		<None Remove="XForms\LogWindow.xaml" />
+	</ItemGroup>
+	<ItemGroup>
+		<Compile Update="Forms\OptionsPanel.cs">
+		  <SubType>UserControl</SubType>
+		</Compile>
+		<Compile Update="Forms\InfoPanel.cs">
+		  <SubType>UserControl</SubType>
+		</Compile>
+		<Compile Update="Properties\Resources.Designer.cs">
+		  <Generator></Generator>
+		  <DesignTime>True</DesignTime>
+		  <AutoGen>True</AutoGen>
+		  <DependentUpon>Resources.resx</DependentUpon>
+		</Compile>
+		<Compile Update="Services\Common\QuickAccessForm.cs">
+			<SubType>Form</SubType>
+		</Compile>
+		<Compile Update="services\lg\RemoteControlPanel.cs">
+			<SubType>UserControl</SubType>
+		</Compile>
+		<Compile Update="Services\NVIDIA\NvInfoPanel.cs">
+		  <SubType>UserControl</SubType>
+		</Compile>
+		<Compile Update="Services\NVIDIA\NvPanel.cs" />
+		<Compile Update="Services\Samsung\SamsungPanel.cs">
+			<SubType>UserControl</SubType>
+		</Compile>
+		<EmbeddedResource Include="Resources\LgRemotes.json" />
+		<EmbeddedResource Include="Resources\LG_register_legacy.json" />
+		<EmbeddedResource Include="Resources\LG_register.json" />
+		<EmbeddedResource Include="Resources\RC_coords.txt" />
+		<EmbeddedResource Include="Resources\LG_remote.jpg" />
+		<EmbeddedResource Include="Resources\pngbarn.ico" />
+		<EmbeddedResource Include="Resources\SamsungRemotes.json" />
+		<Content Include="LgPresets.json">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</Content>
+	</ItemGroup>
+	<ItemGroup>
+		<Folder Include="bin\x64\Debug\" />
+	</ItemGroup>
+	<ItemGroup>
+		<COMReference Include="IWshRuntimeLibrary">
+			<Guid>{F935DC20-1CF0-11D0-ADB9-00C04FD58A0B}</Guid>
+			<VersionMajor>1</VersionMajor>
+			<VersionMinor>0</VersionMinor>
+			<Lcid>0</Lcid>
+			<WrapperTool>tlbimp</WrapperTool>
+			<Isolated>False</Isolated>
+			<EmbedInteropTypes>True</EmbedInteropTypes>
+		</COMReference>
+	</ItemGroup>
+	<ItemGroup>
+		<PackageReference Include="Microsoft.Extensions.Hosting.WindowsServices" Version="10.0.7" />
+		<PackageReference Include="Microsoft.Web.WebView2" Version="1.0.3912.50" />
+		<PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
+		<PackageReference Include="NLog" Version="6.1.2" />
+		<PackageReference Include="NStandard" Version="0.110.7" />
+		<PackageReference Include="NWin32" Version="1.2.8" />
+		<PackageReference Include="System.Management" Version="10.0.7" />
+		<PackageReference Include="TaskScheduler" Version="2.12.2" />
+	</ItemGroup>
+	<ItemGroup>
+		<Page Include="XForms\ColorProfileWindow.xaml">
+		  <SubType>Designer</SubType>
+		  <Generator>MSBuild:Compile</Generator>
+		</Page>
+		<Page Include="XForms\BrowserWindow.xaml">
+		  <SubType>Designer</SubType>
+		  <Generator>MSBuild:Compile</Generator>
+		</Page>
+		<Page Include="XForms\LogWindow.xaml">
+			<Generator>MSBuild:Compile</Generator>
+		</Page>
+	</ItemGroup>
+	<ItemGroup>
+		<ProjectReference Include="..\ColorControl.UI\ColorControl.UI.csproj" />
+		<ProjectReference Include="..\MHC2Gen\MHC2Gen.csproj" />
+		<ProjectReference Include="..\NLogViewer\NLogViewer.csproj" />
+		<ProjectReference Include="..\novideo_srgb\novideo_srgb.csproj" />
+		<ProjectReference Include="..\Nspector\Nspector.csproj" />
+		<ProjectReference Include="..\NvAPIWrapper\NvAPIWrapper.csproj" />
+		<ProjectReference Include="..\Shared\Shared.csproj" />
+	</ItemGroup>
+	<ItemGroup>
+		<EmbeddedResource Update="Properties\Resources.resx">
+		  <Generator>PublicResXFileCodeGenerator</Generator>
+		  <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+		</EmbeddedResource>
+		<EmbeddedResource Update="Services\Samsung\SamsungPanel.resx">
+			<SubType>Designer</SubType>
+		</EmbeddedResource>
+	</ItemGroup>
+</Project>

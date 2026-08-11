@@ -1,0 +1,4 @@
+interface:
+  display_name: "Map legacy ColorControl"
+  short_description: "Trace legacy behavior into migration evidence."
+  default_prompt: "Use $map-legacy-colorcontrol to audit a legacy module and update the source and parity maps."

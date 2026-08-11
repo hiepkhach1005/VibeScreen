@@ -1,0 +1,4 @@
+interface:
+  display_name: "ColorControl data migration"
+  short_description: "Migrate legacy data safely into macOS."
+  default_prompt: "Use $migrate-colorcontrol-data to implement or verify a non-destructive legacy import workflow."

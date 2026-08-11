@@ -1,0 +1,355 @@
+﻿@page "/ColorProfile"
+
+@using ColorControl.Shared.Common
+@using ColorControl.Shared.Contracts
+@using ColorControl.Shared.Contracts.DisplayInfo
+@using ColorControl.UI.Components.Pages.Generic
+@using ColorControl.UI.Generics
+@using ColorControl.UI.Pages.Generic
+@using ColorControl.UI.Services
+@inherits SummaryComponentBase
+
+@rendermode Constants.RenderMode
+
+@inject RpcUiClientService _rpcClientService
+@inject JSHelper jsHelper;
+
+<PageTitle>Color profiles</PageTitle>
+
+<ColorProfilePage ColorProfileName="@SelectedColorProfileName" UseAsTemplate="UseAsTemplate" DisplayInfo="SelectedDisplay" AfterApply="AfterColorProfileSaved"></ColorProfilePage>
+
+<ConfirmModal Title="Delete color profile" Message="Are you sure you want to delete the color profile?" OnConfirm="ColorProfileOnDeleteConfirmed" />
+<ConfirmModal ModalId="disassociateConfirmModal" Title="Disassociate color profile" Message="Are you sure you want to disassociate the color profile from the selected display?" OnConfirm="ColorProfileOnDisassociateConfirmed" />
+<ConfirmModal ModalId="associateConfirmModal" ExtraFields="AssociateFields" Title="Associate color profile" Message="Are you sure you want to associate the color profile with the selected display?" OnConfirm="ColorProfileOnAssociateConfirmed" />
+
+<h2>Displays</h2>
+
+@if (Displays == null)
+{
+	<div>Loading...</div>
+}
+else
+{
+	<div class="row mb-2">
+		@if (!Displays.Any())
+		{
+			<span>No displays found</span>
+		}
+		else
+		{
+			<div class="mb-2">
+				<label class="form-label" for="device">Selected display</label>
+				<select class="form-select" id="device" @bind="SelectedDisplayId" @bind:after="SelectedDisplayChanged">
+					@foreach (var display in Displays)
+					{
+						<option value="@display.DisplayId">@display.DisplayName @@ @display.AdapterName</option>
+					}
+				</select>
+			</div>
+		}
+	</div>
+}
+
+@if (SelectedDisplay == null)
+{
+	<div>Loading...</div>
+}
+else
+{
+	<div class="row mb-3">
+		<div class="form-check form-switch ms-3">
+			<input class="form-check-input" type="checkbox" role="switch" id="usePerUserSettings" @bind="SelectedDisplay.UsePerUserSettings" @bind:after="AfterUsePerUseSettings">
+			<label class="form-check-label" for="usePerUserSettings">Use my settings for this device</label>
+		</div>
+	</div>
+
+	<div class="mb-2 d-flex align-items-center">
+		<h2>Display Associated Color profiles</h2>
+		<div class="d-flex ms-auto">
+			<button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#colorProfileModal" @onclick="() => AddColorProfileOnClick()">
+				Add
+			</button>
+		</div>
+	</div>
+	<div class="row mb-3">
+		<div class="col">
+			@if (!SelectedDisplay.ColorProfiles.Any())
+			{
+				<span>No color profiles found that are associated with the display</span>
+			}
+			else
+			{
+				<div class="list-group">
+					@foreach (var colorProfile in SelectedDisplay.ColorProfiles)
+					{
+						<span class="list-group-item list-group-item-action" @onclick="() => SetColorProfileOnClick(colorProfile)" @onclick:preventDefault @onclick:stopPropagation>
+							<div class="d-flex align-items-start justify-content-between">
+								<div>
+									<h5 class="mb-1">
+										@if (colorProfile.IsHDRProfile)
+										{
+											<span class="me-2 badge text-bg-info" title="HDR profile">HDR</span>
+										}
+										else
+										{
+											<span class="me-2 badge text-bg-secondary" title="SDR profile">SDR</span>
+										}
+										@colorProfile.Name
+										@if (colorProfile.IsHDRProfile && colorProfile.Name == SelectedDisplay?.DefaultHdrColorProfile)
+										{
+											<span class="ms-2 badge text-bg-warning" title="Active HDR color profile">Active HDR</span>
+										}
+										else if (!colorProfile.IsHDRProfile && colorProfile.Name == SelectedDisplay?.DefaultSdrColorProfile)
+										{
+											<span class="ms-2 badge text-bg-warning" title="Active SDR color profile">Active SDR</span>
+										}
+									</h5>
+								</div>
+
+								<span class="d-none d-lg-block">
+									<button class="btn btn-warning btn-sm" data-bs-toggle="modal" data-bs-target="#disassociateConfirmModal" @onclick="() => SelectedColorProfile = colorProfile" @onclick:preventDefault @onclick:stopPropagation>Disassociate</button>
+									<button class="btn btn-danger btn-sm" data-bs-toggle="modal" data-bs-target="#confirmModal" @onclick="() => DeleteColorProfileOnClick(colorProfile.Name)" @onclick:preventDefault @onclick:stopPropagation>Delete</button>
+									<button class="btn btn-secondary btn-sm" data-bs-toggle="modal" data-bs-target="#colorProfileModal" @onclick="() => CloneColorProfileOnClick(colorProfile.Name)" @onclick:preventDefault @onclick:stopPropagation>Clone</button>
+									<button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#colorProfileModal" @onclick="() => EditColorProfileOnClick(colorProfile.Name)" @onclick:preventDefault @onclick:stopPropagation>Edit</button>
+								</span>
+								<div class="d-lg-none" @onclick:preventDefault @onclick:stopPropagation>
+									<button type="button" class="btn btn-sm btn-outline-secondary" data-bs-toggle="dropdown" aria-expanded="false">
+										<i class="bi bi-three-dots-vertical"></i>
+									</button>
+									<ul class="dropdown-menu">
+										<li><a class="dropdown-item" data-bs-toggle="modal" data-bs-target="#disassociateConfirmModal" @onclick="() => SelectedColorProfileName = colorProfile.Name">Disassociate</a></li>
+										<li><a class="dropdown-item" data-bs-toggle="modal" data-bs-target="#confirmModal" @onclick="() => DeleteColorProfileOnClick(colorProfile.Name)">Delete</a></li>
+										<li><a class="dropdown-item" data-bs-toggle="modal" data-bs-target="#colorProfileModal" @onclick="() => CloneColorProfileOnClick(colorProfile.Name)">Clone</a></li>
+										<li><a class="dropdown-item" data-bs-toggle="modal" data-bs-target="#colorProfileModal" @onclick="() => EditColorProfileOnClick(colorProfile.Name)">Edit</a></li>
+									</ul>
+								</div>
+							</div>
+						</span>
+					}
+				</div>
+			}
+		</div>
+	</div>
+}
+
+<div class="mb-2 d-flex align-items-center">
+	<h2>Other Color profiles</h2>
+</div>
+<div class="row mb-3">
+	<div class="col">
+		@if (ColorProfileNames == null)
+		{
+			<span>No profiles found</span>
+		}
+		else
+		{
+			<div class="list-group">
+				@foreach (var colorProfile in ColorProfileNames)
+				{
+					<span class="list-group-item list-group-item-action" @onclick="() => EditColorProfileOnClick(colorProfile)" @onclick:preventDefault @onclick:stopPropagation>
+						<div class="d-flex align-items-start justify-content-between">
+							<div>
+								<h5 class="mb-1">
+									@colorProfile
+								</h5>
+							</div>
+
+							<span class="d-none d-lg-block">
+								<button class="btn btn-warning btn-sm" data-bs-toggle="modal" data-bs-target="#associateConfirmModal" @onclick="() => AssociateColorProfileOnClick(colorProfile)" @onclick:preventDefault @onclick:stopPropagation>Associate</button>
+								<button class="btn btn-danger btn-sm" data-bs-toggle="modal" data-bs-target="#confirmModal" @onclick="() => DeleteColorProfileOnClick(colorProfile)" @onclick:preventDefault @onclick:stopPropagation>Delete</button>
+								<button class="btn btn-secondary btn-sm" data-bs-toggle="modal" data-bs-target="#colorProfileModal" @onclick="() => CloneColorProfileOnClick(colorProfile)" @onclick:preventDefault @onclick:stopPropagation>Clone</button>
+								<button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#colorProfileModal" @onclick="() => EditColorProfileOnClick(colorProfile)" @onclick:preventDefault @onclick:stopPropagation>Edit</button>
+							</span>
+							<div class="d-lg-none" @onclick:preventDefault @onclick:stopPropagation>
+								<button type="button" class="btn btn-sm btn-outline-secondary" data-bs-toggle="dropdown" aria-expanded="false">
+									<i class="bi bi-three-dots-vertical"></i>
+								</button>
+								<ul class="dropdown-menu">
+									<li><a class="dropdown-item" data-bs-toggle="modal" data-bs-target="#associateConfirmModal" @onclick="() => AssociateColorProfileOnClick(colorProfile)">Associate</a></li>
+									<li><a class="dropdown-item" data-bs-toggle="modal" data-bs-target="#confirmModal" @onclick="() => DeleteColorProfileOnClick(colorProfile)">Delete</a></li>
+									<li><a class="dropdown-item" data-bs-toggle="modal" data-bs-target="#colorProfileModal" @onclick="() => CloneColorProfileOnClick(colorProfile)">Clone</a></li>
+									<li><a class="dropdown-item" data-bs-toggle="modal" data-bs-target="#colorProfileModal" @onclick="() => EditColorProfileOnClick(colorProfile)">Edit</a></li>
+								</ul>
+							</div>
+						</div>
+					</span>
+				}
+			</div>
+		}
+	</div>
+</div>
+
+@code {
+
+	private string? SelectedDisplayId;
+	private DisplayInfoDto? SelectedDisplay;
+	private List<DisplayInfoDto>? Displays;
+	private string? SelectedColorProfileName;
+	private ColorProfileDto? SelectedColorProfile;
+	private bool UseAsTemplate;
+	private List<string>? ColorProfileNames;
+	private List<FieldDefinition>? AssociateFields;
+
+	private FieldDefinition AskHdrAssociationField = new FieldDefinition { Label = "Associate as HDR profile", FieldType = FieldType.CheckBox, Value = false };
+
+
+	protected override async Task OnInitializedAsync()
+	{
+		await base.OnInitializedAsync();
+
+		await Refresh();
+	}
+
+	protected override async Task Refresh()
+	{
+		await RefreshDisplays();
+	}
+
+	private void AddColorProfileOnClick()
+	{
+		SelectedColorProfileName = "";
+	}
+
+	private async Task EditColorProfileOnClick(string colorProfile)
+	{
+		UseAsTemplate = false;
+		SelectedColorProfileName = colorProfile;
+		await jsHelper.OpenModal("colorProfileModal");
+	}
+
+	private async Task SetColorProfileOnClick(ColorProfileDto colorProfile)
+	{
+		if (SelectedDisplay == null)
+		{
+			return;
+		}
+
+		var result = await _rpcClientService.CallAsync<bool>("ColorProfileService", "SetDisplayDefaultColorProfile", SelectedDisplay.DeviceName, colorProfile.Name, Type.Missing, colorProfile.IsHDRProfile);
+		if (result)
+		{
+			if (colorProfile.IsHDRProfile)
+			{
+				SelectedDisplay.DefaultHdrColorProfile = colorProfile.Name;
+			}
+			else
+			{
+				SelectedDisplay.DefaultSdrColorProfile = colorProfile.Name;
+			}
+		}
+	}
+
+	private void AssociateColorProfileOnClick(string colorProfile)
+	{
+		SelectedColorProfileName = colorProfile;
+		if (SelectedDisplay?.IsAdvancedColorSupported == true)
+		{
+			AskHdrAssociationField.Value = false;
+			AssociateFields = [AskHdrAssociationField];
+		}
+		else
+		{
+			AssociateFields = null;
+		}
+	}
+
+	private void DeleteColorProfileOnClick(string colorProfile)
+	{
+		SelectedColorProfileName = colorProfile;
+	}
+
+	private void CloneColorProfileOnClick(string colorProfile)
+	{
+		UseAsTemplate = true;
+		SelectedColorProfileName = colorProfile;
+	}
+
+	private async Task ColorProfileOnDeleteConfirmed()
+	{
+		if (SelectedColorProfileName == null)
+		{
+			return;
+		}
+
+		await _rpcClientService.CallAsync<bool>("ColorProfileService", "DeleteColorProfile", SelectedColorProfileName);
+
+		SelectedColorProfileName = null;
+
+		await RefreshDisplays();
+		StateHasChanged();
+	}
+
+	private async Task ColorProfileOnDisassociateConfirmed()
+	{
+		if (SelectedColorProfile == null || SelectedDisplay == null)
+		{
+			return;
+		}
+
+		await _rpcClientService.CallAsync<bool>("ColorProfileService", "RemoveDisplayColorProfile", SelectedDisplay.DeviceName, SelectedColorProfile.Name, SelectedColorProfile.IsHDRProfile);
+
+		SelectedColorProfile = null;
+
+		await RefreshDisplays();
+		StateHasChanged();
+	}
+
+	private async Task ColorProfileOnAssociateConfirmed()
+	{
+		if (SelectedColorProfileName == null || SelectedDisplay == null)
+		{
+			return;
+		}
+
+		await _rpcClientService.CallAsync<bool>("ColorProfileService", "AddDisplayColorProfile", SelectedDisplay.DeviceName, SelectedColorProfileName, false, AskHdrAssociationField.BoolValue);
+
+		SelectedColorProfileName = null;
+
+		await RefreshDisplays();
+		StateHasChanged();
+	}
+
+	private async Task SelectedDisplayChanged()
+	{
+		SelectedDisplay = Displays?.FirstOrDefault(d => d.DisplayId == SelectedDisplayId);
+
+		ColorProfileNames = await _rpcClientService.CallAsync<List<string>>("ColorProfileService", "GetAllColorProfileNames");
+
+		if (SelectedDisplay != null)
+		{
+			ColorProfileNames = ColorProfileNames?.Except(SelectedDisplay.ColorProfiles.Select(p => p.Name)).ToList();
+		}
+	}
+
+	private async Task AfterColorProfileSaved(ColorProfileDto colorProfile)
+	{
+		await RefreshDisplays();
+		StateHasChanged();
+	}
+
+	private async Task RefreshDisplays()
+	{
+		Displays = await _rpcClientService.CallAsync<List<DisplayInfoDto>>("ColorProfileService", "GetDisplayInfos");
+
+		if (Displays?.Any() == true)
+		{
+			SelectedDisplayId = (Displays.FirstOrDefault(d => d.DisplayId == SelectedDisplayId) ?? Displays.First()).DisplayId;
+		}
+
+		await SelectedDisplayChanged();
+	}
+
+	private async Task AfterUsePerUseSettings()
+	{
+		if (SelectedDisplay == null)
+		{
+			return;
+		}
+
+		var result = await _rpcClientService.CallAsync<bool>("ColorProfileService", "SetUsePerUserDisplayProfiles", SelectedDisplay.DeviceName, SelectedDisplay.UsePerUserSettings);
+
+		if (result)
+		{
+			await RefreshDisplays();
+		}
+	}
+}

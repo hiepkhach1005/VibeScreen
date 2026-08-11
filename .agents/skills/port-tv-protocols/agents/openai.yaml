@@ -1,0 +1,4 @@
+interface:
+  display_name: "TV protocol porting"
+  short_description: "Port LG and Samsung protocols safely."
+  default_prompt: "Use $port-tv-protocols to implement and test an LG or Samsung device workflow."

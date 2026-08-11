@@ -1,0 +1,4 @@
+interface:
+  display_name: "Swift quality gates"
+  short_description: "Enforce Swift, test, security, and release gates."
+  default_prompt: "Use $enforce-swift-quality to review this native macOS change against project quality gates."
