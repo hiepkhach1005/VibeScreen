@@ -6,6 +6,8 @@
 	<string>ColorControl</string>
 	<key>CFBundleIdentifier</key>
 	<string>com.colorcontrol.mac</string>
+	<key>CFBundleIconFile</key>
+	<string>ColorControlIcon.icns</string>
 	<key>LSApplicationCategoryType</key>
 	<string>public.app-category.utilities</string>
 	<key>NSLocalNetworkUsageDescription</key>

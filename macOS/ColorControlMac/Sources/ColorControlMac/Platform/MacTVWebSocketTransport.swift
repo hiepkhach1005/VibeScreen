@@ -1,14 +1,18 @@
 import ColorControlCore
+import CryptoKit
 import Foundation
+import os
 import Security
 
 /// A serial URLSession WebSocket transport for local TV control. TLS uses the
 /// system trust policy; no global certificate-validation bypass is allowed.
 actor MacTVWebSocketTransport: TVTransport {
     private var task: URLSessionWebSocketTask?
-    private let credentials: KeychainCredentialStore
+    private var session: URLSession?
+    private var trustDelegate: ScopedTVTrustDelegate?
+    private let credentials: any TVCredentialStore
 
-    init(credentials: KeychainCredentialStore = KeychainCredentialStore()) {
+    init(credentials: any TVCredentialStore = MigratingCredentialStore()) {
         self.credentials = credentials
     }
 
@@ -18,7 +22,23 @@ actor MacTVWebSocketTransport: TVTransport {
         }
 
         task?.cancel(with: .goingAway, reason: nil)
-        let nextTask = URLSession.shared.webSocketTask(with: url)
+        session?.invalidateAndCancel()
+
+        let nextDelegate = ScopedTVTrustDelegate(
+            expectedHost: device.host,
+            trustedFingerprint: device.trustedCertificateSHA256
+        )
+        let configuration = URLSessionConfiguration.ephemeral
+        configuration.timeoutIntervalForRequest = 15
+        configuration.timeoutIntervalForResource = 60
+        let nextSession = URLSession(
+            configuration: configuration,
+            delegate: nextDelegate,
+            delegateQueue: nil
+        )
+        let nextTask = nextSession.webSocketTask(with: url)
+        trustDelegate = nextDelegate
+        session = nextSession
         task = nextTask
         nextTask.resume()
     }
@@ -32,8 +52,15 @@ actor MacTVWebSocketTransport: TVTransport {
             throw TVProtocolError.malformedMessage
         }
 
-        try await task.send(.string(text))
-        return try await receive()
+        do {
+            try await task.send(.string(text))
+            return try await receive()
+        } catch {
+            if let fingerprint = trustDelegate?.rejectedFingerprint() {
+                throw TVProtocolError.untrustedCertificate(fingerprint: fingerprint)
+            }
+            throw error
+        }
     }
 
     func receive() async throws -> Data? {
@@ -55,7 +82,10 @@ actor MacTVWebSocketTransport: TVTransport {
 
     func disconnect() async {
         task?.cancel(with: .normalClosure, reason: nil)
+        session?.invalidateAndCancel()
         task = nil
+        session = nil
+        trustDelegate = nil
     }
 
     private func makeURL(for device: TVDeviceDescriptor) throws -> URL? {
@@ -79,6 +109,76 @@ actor MacTVWebSocketTransport: TVTransport {
             components.port = device.usesSecureConnection ? 3001 : 3000
             return components.url
         }
+    }
+}
+
+/// Accepts a locally issued TV certificate only when its leaf SHA-256
+/// fingerprint was explicitly pinned for this exact configured host.
+private final class ScopedTVTrustDelegate: NSObject, URLSessionDelegate, Sendable {
+    private let expectedHost: String
+    private let trustedFingerprint: String?
+    private let rejectedFingerprintState = OSAllocatedUnfairLock<String?>(initialState: nil)
+
+    init(expectedHost: String, trustedFingerprint: String?) {
+        self.expectedHost = expectedHost
+        self.trustedFingerprint = trustedFingerprint.map(Self.normalized)
+    }
+
+    func rejectedFingerprint() -> String? {
+        rejectedFingerprintState.withLock { $0 }
+    }
+
+    func urlSession(
+        _ session: URLSession,
+        didReceive challenge: URLAuthenticationChallenge,
+        completionHandler: @escaping @Sendable (URLSession.AuthChallengeDisposition, URLCredential?) -> Void
+    ) {
+        guard challenge.protectionSpace.authenticationMethod == NSURLAuthenticationMethodServerTrust,
+              challenge.protectionSpace.host.caseInsensitiveCompare(expectedHost) == .orderedSame,
+              let trust = challenge.protectionSpace.serverTrust else {
+            completionHandler(.performDefaultHandling, nil)
+            return
+        }
+
+        if SecTrustEvaluateWithError(trust, nil) {
+            completionHandler(.performDefaultHandling, nil)
+            return
+        }
+
+        guard let certificates = SecTrustCopyCertificateChain(trust) as? [SecCertificate],
+              let leafCertificate = certificates.first else {
+            completionHandler(.cancelAuthenticationChallenge, nil)
+            return
+        }
+
+        let certificateData = SecCertificateCopyData(leafCertificate) as Data
+        let fingerprint = SHA256.hash(data: certificateData)
+            .map { String(format: "%02X", $0) }
+            .joined()
+
+        if let trustedFingerprint, trustedFingerprint == fingerprint {
+            completionHandler(.useCredential, URLCredential(trust: trust))
+            return
+        }
+
+        rejectedFingerprintState.withLock {
+            $0 = Self.displayed(fingerprint)
+        }
+        completionHandler(.cancelAuthenticationChallenge, nil)
+    }
+
+    private static func normalized(_ fingerprint: String) -> String {
+        fingerprint
+            .uppercased()
+            .filter { $0.isHexDigit }
+    }
+
+    private static func displayed(_ fingerprint: String) -> String {
+        stride(from: 0, to: fingerprint.count, by: 2).map { offset in
+            let start = fingerprint.index(fingerprint.startIndex, offsetBy: offset)
+            let end = fingerprint.index(start, offsetBy: min(2, fingerprint.count - offset))
+            return String(fingerprint[start..<end])
+        }.joined(separator: ":")
     }
 }
 
@@ -139,6 +239,7 @@ public struct KeychainCredentialStore: Sendable {
             kSecClass as String: kSecClassGenericPassword,
             kSecAttrService as String: service,
             kSecAttrAccount as String: reference,
+            kSecAttrAccessible as String: kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly,
             kSecValueData as String: data
         ]
 
@@ -195,5 +296,6 @@ public struct KeychainCredentialStore: Sendable {
         guard status == errSecSuccess || status == errSecItemNotFound else {
             throw KeychainCredentialError.unexpectedStatus(status)
         }
+
     }
 }

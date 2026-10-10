@@ -14,6 +14,9 @@ Destination for the new native macOS application.
 - Native game/application launcher.
 - ColorSync-based color-profile support and public-API display controls where feasible.
 - Native settings, logging, migration, accessibility, signing, and update flow.
+- A native System Monitor for public CPU, memory, network, thermal-pressure,
+  and power-source telemetry, with explicit unavailable states for private
+  hardware sensors.
 
 ## Explicit exclusions
 
@@ -30,10 +33,16 @@ The native foundation is present as a Swift Package Manager project:
   parsing, actor-based execution with retry/cancellation, automation/power
   routing, schema-v2 persistence, migration importers, LG/Samsung codecs, and
   Wake-on-LAN contracts.
-- `ColorControlMac` contains SwiftUI/MenuBarExtra UI, preset/device/game flows,
-  AppKit/NSWorkspace events, Keychain, WebSocket clients, LG pointer remote,
+- `ColorControlMac` contains SwiftUI/AppKit menu-bar and window UI, preset/device/game flows,
+  AppKit/NSWorkspace events, production Keychain storage, an explicit
+  owner-only local-development credential-file mode, WebSocket clients, LG pointer remote,
   Network.framework WOL, native app/process launch, display modes, and ICC
   inventory/validation boundaries.
+- Branding is native: `ColorControlMark.swift` draws the monochrome menu-bar
+  mark, while `Resources/ColorControlIcon.icns` is the packaged Dock/Finder
+  artwork. Regenerate the artwork with `swift Scripts/render-app-icon.swift`
+  followed by the documented `sips`/`iconutil` iconset step when the mark
+  changes.
 - `ColorControlMac.entitlements` is the minimum sandbox profile for outgoing
   TV/WOL networking. Select it in the Xcode target when packaging the app;
   Swift Package Manager alone does not sign an executable with entitlements.
@@ -41,10 +50,12 @@ The native foundation is present as a Swift Package Manager project:
   retry policy, event matching, protocol message shapes, migration/store,
   Samsung endpoint construction, TV power coordination, and WOL.
 
-The source is not yet a released hardware build. Swift/Xcode is unavailable in
-the current Windows environment, so the package, app bundle, Keychain pairing,
-power events, ColorSync association, and real-TV behavior must be compiled and
-tested on macOS before parity is accepted.
+The source is not yet a released hardware build. The SwiftPM development app
+bundle builds with Xcode 27.0 / Swift 6.4 and is assembled by
+`Scripts/build-dev-app.sh`; the current ad-hoc signed bundle was copied to
+`$HOME/Documents/ColorControlMac.app`. XCTest, Xcode archive,
+distribution signing/notarization, ColorSync association, UI smoke, and
+complete real-TV behavior remain acceptance gates.
 
 Read `../../migration/PROGRESS.md` and `../../migration/MASTER_PROMPT.md` before
 continuing the migration.

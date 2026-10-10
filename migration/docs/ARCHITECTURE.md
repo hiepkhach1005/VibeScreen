@@ -55,7 +55,8 @@ ADR.
 - `ColorControlMac.App`: composition root and lifecycle.
 - `ColorControlMac.Features`: SwiftUI screens and presentation state.
 - `ColorControlMac.Platform`: public macOS adapters for power/session/display/process/login and TV transport.
-- `ColorControlMac.Infrastructure`: future release/update boundaries; secrets remain in Keychain.
+- `ColorControlMac.Infrastructure`: future release/update boundaries; production
+  secrets remain in Keychain, with a compile-time local-debug file adapter.
 
 ## Concurrency
 
@@ -67,11 +68,13 @@ ADR.
 
 ## Implemented native foundation
 
-1. SwiftUI main window, `MenuBarExtra`, settings, and Liquid Glass availability path.
+1. A SwiftUI `Window` scene hidden during accessory startup, a public AppKit
+   `NSStatusItem`/`NSPopover` shell with both-button activation, Settings, and
+   the Liquid Glass availability path.
 2. Domain preset/step models, target-aware legacy parser, actor executor, retry/cancellation, and result reporting.
 3. In-memory repository plus schema-v2 Application Support store and backup.
 4. Automation routing and normalized NSWorkspace/AppKit power/session/display/process events.
-5. TV protocol codecs, Keychain references, LG/Samsung WebSocket clients, LG pointer remote, WOL sender, and TV power-policy coordinator.
+5. TV protocol codecs, credential references and adapters, LG/Samsung WebSocket clients, LG pointer remote, WOL sender, and TV power-policy coordinator.
 6. Native game launcher, display snapshots/modes, ICC inventory/validation, login-item adapter, and migration importers.
 
 This is a bounded native foundation, not an accepted hardware release. LG and

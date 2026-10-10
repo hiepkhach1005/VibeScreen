@@ -34,6 +34,27 @@ final class PresetDeviceActionRouterTests: XCTestCase {
         let addresses = await wake.sentAddresses()
         XCTAssertEqual(addresses, ["AA:BB:CC:DD:EE:11"])
     }
+
+    func testManualPowerOffBlocksAutomaticScreenWakeUntilExplicitPowerOn() async throws {
+        let descriptor = TVDeviceDescriptor(
+            name: "Office TV",
+            kind: .lgWebOS,
+            host: "192.168.1.72"
+        )
+        let controller = RouterRecordingController(descriptor: descriptor)
+        let router = PresetDeviceActionRouter()
+        await router.register(controller)
+        await router.recordManualPowerAction(.screenOff, for: descriptor.id)
+
+        try await router.execute(.deviceCommand(target: descriptor.host, command: "ScreenOn"))
+        let suppressedCommands = await controller.commands()
+        XCTAssertEqual(suppressedCommands, [])
+
+        await router.recordManualPowerAction(.screenOn, for: descriptor.id)
+        try await router.execute(.deviceCommand(target: descriptor.host, command: "ScreenOn"))
+        let commands = await controller.commands()
+        XCTAssertEqual(commands, [.screenOn])
+    }
 }
 
 private actor RouterRecordingWakeOnLAN: WakeOnLANSender {

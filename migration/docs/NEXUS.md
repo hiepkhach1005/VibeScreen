@@ -10,8 +10,30 @@ This is the compact project index. Detailed evidence belongs in the linked files
 - Formal legacy source audit: lifecycle/core and 108-row migratable function audit
   recorded; deep protocol/UI/schema verification remains open.
 - Feature-parity matrix: implementation rows now record bounded native evidence and Mac/hardware gates.
-- Native Swift application: Swift Package Manager app, core, persistence, TV/WOL/power, game/display adapters, and SwiftUI shell are present.
-- macOS build verification: not started; current environment is Windows.
+- Native Swift application: Swift Package Manager app, core, persistence,
+  TV/WOL/power, game/display adapters, SwiftUI shell, visible LG pairing/test
+  states, a compact sidebar with an optional unified Overview (hidden by
+  default), a Devices tree, and Settings, inline per-device power/session
+  automation and LG controls, a live public-API System Monitor with persisted
+  sampling interval and explicit unavailable sensor states, explicit per-host certificate pinning, and a
+  device-local LG control center with the legacy
+  four-control Game Bar plus Volume, broad scalar setting catalog,
+  media/input/app actions, one-shot setting read-back, a first-TV five-slider
+  menu-bar popover, and one editable first-TV power-toggle recorder with live
+  LG/Samsung state reads and conflict feedback are present. Every app launch
+  now starts menu-bar-only; left- and right-click on the AppKit status item open
+  the same popover, and its Open action creates/focuses the main window. Device
+  policy changes cancel pending actions using the prior policy.
+- macOS build verification: the SwiftPM development app bundle built with
+  Xcode 27.0 / Swift 6.4 and was replaced at
+  `$HOME/Documents/ColorControlMac.app`; strict code-sign verification
+  passed and the installed binary matches the build. Launch smoke confirmed it
+  stays alive as a menu-bar app with no main window. Left/right-click popover
+  activation, Open-window behavior, and return to menu-bar-only after window
+  close were confirmed. The popover now observes other-app activation and
+  closes on focus change; updated-build UI verification is pending because an
+  unrelated Gatekeeper dialog blocked accessibility interaction. XCTest,
+  Xcode archive, distribution signing, and hardware checks remain unverified.
 
 ## Required reading order
 
@@ -73,10 +95,9 @@ This is the compact project index. Detailed evidence belongs in the linked files
 
 ## Current safe task
 
-Move `macOS/ColorControlMac/` to a Mac build machine, run the native package
-tests/build, fix Swift 6 and SDK availability issues, and then exercise the LG
-pairing/pointer-remote vertical slice behind the existing transport/Keychain/core
-contracts. Do not change `legacy-windows/`.
+Continue the LG pairing/pointer-remote hardware checks. The current local
+script build uses the explicit development-file credential mode; release
+artifacts remain Keychain-only. Do not change `legacy-windows/`.
 
 ## Unresolved product decisions
 

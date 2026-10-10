@@ -4,9 +4,10 @@ Use this inventory as the minimum planning surface. Link every row to feature-pa
 
 | Surface | Primary job | Required states |
 |---|---|---|
-| Menu bar | Inspect current state and run frequent safe actions | no devices, connecting, online, partial offline, automation running, update available |
+| Menu bar | Inspect current state and run frequent safe actions; left- and right-click open the same controls popover | no devices, connecting, online, partial offline, automation running, update available |
 | Dashboard | Understand system/device status and recent automation | empty, loading, healthy, warnings, permission blocked |
 | Devices | Discover, add, pair, rename, select, and remove TVs | scanning, none found, manual entry, pairing, trust warning, offline, error |
+| Monitor | Inspect live Mac utilization, network, thermal pressure, and power telemetry | collecting first sample, live, partial sensor availability, sampling error |
 | LG detail | Inspect connection and run LG capabilities | capability unavailable, reconnecting, command progress/failure |
 | LG remote | Send grouped remote/media/input commands | disconnected, key hold, custom layout, dangerous service action |
 | Samsung detail | Inspect connection and run Samsung capabilities | token missing/invalid, reconnecting, capability unavailable |
@@ -18,7 +19,7 @@ Use this inventory as the minimum planning surface. Link every row to feature-pa
 | Displays | Inspect displays and supported controls | display disconnected, unsupported API/hardware, permission failure |
 | Color profiles | List, import, generate, associate, and restore profiles | invalid ICC, write failure, unsupported metadata, confirmation |
 | Migration assistant | Select legacy folder, preview, import, and roll back | no data, malformed data, conflicts, dry-run warnings, success |
-| Settings | Configure startup, behavior, permissions, logs, and updates | managed/disabled option, permission denied, restart required |
+| Settings | Configure startup, behavior, permissions, logs, updates, and first-TV shortcuts | managed/disabled option, shortcut recording, duplicate/registration error, permission denied, restart required |
 | Logs | Filter, inspect, copy, and export redacted diagnostics | empty, live updates paused, export error |
 | About/update | Show version, licenses, update state, and release action | checking, current, available, failed |
 

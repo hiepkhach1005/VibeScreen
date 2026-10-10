@@ -14,6 +14,7 @@
 *.userprefs
 
 # Build results
+.build/
 [Dd]ebug/
 [Dd]ebugPublic/
 [Rr]elease/
@@ -339,3 +340,23 @@ ASALocalRun/
 # BeatPulse healthcheck temp database
 healthchecksdb
 *.clef
+
+# Local metadata, generated reports, and private configuration
+.DS_Store
+DerivedData/
+build/
+dist/
+xcuserdata/
+*.xcuserstate
+*.sarif
+.env
+.env.*
+!.env.example
+!.env.sample
+*.local.xcconfig
+Secrets.xcconfig
+*.p12
+*.pem
+*.key
+*.mobileprovision
+DevelopmentCredentials/

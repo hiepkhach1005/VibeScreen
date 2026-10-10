@@ -18,7 +18,10 @@ Exact fields and serializer behavior remain an audit task. Do not implement a de
 ## Native destination
 
 - Durable non-secret data: `Application Support/ColorControl` versioned store.
-- Secrets: Keychain records keyed by product, device kind, stable device identity, and credential kind.
+- Secrets: Keychain records keyed by product, device kind, stable device
+  identity, and credential kind. An explicitly compiled local debug app may
+  move them to owner-only plaintext files outside the native JSON snapshot;
+  production remains Keychain-only.
 - Cache/discovery: Caches, never source of truth.
 - Logs: OSLog; legacy logs are not imported by default.
 - User-selected app/profile URLs: bookmark or security-scoped URL strategy after sandbox/distribution decision.
@@ -48,9 +51,13 @@ verify and record provenance
 - Remove Windows UI, web, NVIDIA, AMD, elevation, registry, WMI, and Task Scheduler settings from active native configuration.
 - Preserve unsupported or unknown preset actions as disabled migration records requiring user repair; do not silently delete them.
 - Preserve order, delay, trigger, quick-access and device relationships.
-- Convert LG client keys and Samsung tokens to Keychain; never copy them to native JSON.
+- Convert LG client keys and Samsung tokens to Keychain; never copy them to
+  native JSON. The separate local-development file mode is a post-import,
+  explicitly enabled credential-store choice and is never an importer fallback.
 - Convert Windows `.exe` game paths to unresolved native targets with a user reselect step.
 - Keep display/profile names as provenance; re-resolve macOS display IDs by stable metadata when possible.
+- Decode missing native LG live-sync preferences as enabled with a five-second
+  interval; persist user changes in the non-secret Application Support snapshot.
 
 ## Safety requirements
 
@@ -60,4 +67,4 @@ verify and record provenance
 - Writes are atomic and idempotent.
 - Repeated imports do not duplicate devices/presets/remotes.
 - Malformed/future data produces a report, not a crash or data loss.
-- Secret migration failures never fall back to plaintext.
+- Import-time secret migration failures never fall back to plaintext.

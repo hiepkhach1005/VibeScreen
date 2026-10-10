@@ -17,6 +17,9 @@ Provide a native macOS control room for displays and smart TVs. The app must mak
 - Display enumeration and public-API display controls where feasible.
 - ColorSync profile listing, association, import/generation, and restore where public APIs and hardware permit.
 - WOL, native logging, settings, update checks, permission diagnostics, and legacy-data import.
+- Native Mac monitoring for public aggregate CPU/RAM utilization, network
+  throughput, thermal pressure, and available power-source values. Hardware
+  sensors without documented public APIs must remain explicitly unavailable.
 
 ### Explicitly excluded
 
@@ -40,7 +43,10 @@ Excluded behavior must not remove shared preset, event, persistence, or navigati
 
 - Preserve user presets, step order, delays, trigger conditions, device associations, and custom remotes.
 - Import from a user-selected legacy folder without modifying it.
-- Store client keys/tokens only in Keychain.
+- Store client keys/tokens in Keychain in production. Permit only an explicitly
+  compiled local-debug plaintext file mode with `0600` files, visible warning,
+  no synchronization/logging/fixtures, deletion, and migration back to
+  Keychain.
 - Make migration dry-run, backed up, atomic, idempotent, and recoverable.
 
 ## Technical requirements

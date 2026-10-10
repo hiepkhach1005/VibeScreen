@@ -45,9 +45,9 @@ final class MacDisplayControl {
         var seen: Set<String> = []
         for mode in modes {
             let snapshot = MacDisplayModeSnapshot(
-                pixelWidth: CGDisplayModeGetPixelWidth(mode),
-                pixelHeight: CGDisplayModeGetPixelHeight(mode),
-                refreshRate: CGDisplayModeGetRefreshRate(mode)
+                pixelWidth: mode.pixelWidth,
+                pixelHeight: mode.pixelHeight,
+                refreshRate: mode.refreshRate
             )
             guard seen.insert(snapshot.id).inserted else { continue }
             snapshots.append(snapshot)
@@ -68,9 +68,9 @@ final class MacDisplayControl {
 
         guard let selected = modes.first(where: { candidate in
             let candidateMode = MacDisplayModeSnapshot(
-                pixelWidth: CGDisplayModeGetPixelWidth(candidate),
-                pixelHeight: CGDisplayModeGetPixelHeight(candidate),
-                refreshRate: CGDisplayModeGetRefreshRate(candidate)
+                pixelWidth: candidate.pixelWidth,
+                pixelHeight: candidate.pixelHeight,
+                refreshRate: candidate.refreshRate
             )
             return candidateMode.id == mode.id
         }) else {

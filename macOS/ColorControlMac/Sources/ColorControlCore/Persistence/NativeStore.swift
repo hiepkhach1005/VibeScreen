@@ -1,12 +1,89 @@
 import Foundation
 
+public struct GlobalKeyboardShortcut: Codable, Sendable, Equatable {
+    public var keyCode: UInt16
+    public var key: String
+    public var usesCommand: Bool
+    public var usesOption: Bool
+    public var usesControl: Bool
+    public var usesShift: Bool
+
+    public init(
+        keyCode: UInt16,
+        key: String,
+        usesCommand: Bool,
+        usesOption: Bool,
+        usesControl: Bool,
+        usesShift: Bool
+    ) {
+        self.keyCode = keyCode
+        self.key = key
+        self.usesCommand = usesCommand
+        self.usesOption = usesOption
+        self.usesControl = usesControl
+        self.usesShift = usesShift
+    }
+
+    public var displayText: String {
+        var result = ""
+        if usesControl { result += "⌃" }
+        if usesOption { result += "⌥" }
+        if usesShift { result += "⇧" }
+        if usesCommand { result += "⌘" }
+        return result + key
+    }
+
+    public var hasRegistrationModifier: Bool {
+        usesCommand || usesOption || usesControl
+    }
+
+    /// Control-O is the single first-TV power toggle shortcut.
+    public static let defaultTVPowerToggle = GlobalKeyboardShortcut(
+        keyCode: 31,
+        key: "O",
+        usesCommand: false,
+        usesOption: false,
+        usesControl: true,
+        usesShift: false
+    )
+
+    public static let legacyDefaultTVPowerOn = GlobalKeyboardShortcut(
+        keyCode: 126,
+        key: "↑",
+        usesCommand: true,
+        usesOption: true,
+        usesControl: true,
+        usesShift: false
+    )
+
+    public static let legacyDefaultTVPowerOff = GlobalKeyboardShortcut(
+        keyCode: 125,
+        key: "↓",
+        usesCommand: true,
+        usesOption: true,
+        usesControl: true,
+        usesShift: false
+    )
+}
+
 public struct NativeAppSettings: Codable, Sendable, Equatable {
+    public static let minimumLGLiveSyncIntervalSeconds = 1
+    public static let maximumLGLiveSyncIntervalSeconds = 3_600
+    public static let minimumSystemMonitorIntervalMilliseconds = 500
+    public static let maximumSystemMonitorIntervalMilliseconds = 60_000
+
     public var launchAtLogin: Bool
     public var startHidden: Bool
     public var minimizeToMenuBar: Bool
     public var checkForUpdates: Bool
     public var logLevel: String
     public var processMonitorIntervalMilliseconds: Int
+    public var systemMonitorIntervalMilliseconds: Int
+    public var showSystemMonitorInSidebar: Bool
+    public var showOverviewInSidebar: Bool
+    public var lgLiveSyncEnabled: Bool
+    public var lgLiveSyncIntervalSeconds: Int
+    public var tvPowerToggleShortcut: GlobalKeyboardShortcut
 
     public init(
         launchAtLogin: Bool = false,
@@ -14,7 +91,13 @@ public struct NativeAppSettings: Codable, Sendable, Equatable {
         minimizeToMenuBar: Bool = true,
         checkForUpdates: Bool = true,
         logLevel: String = "info",
-        processMonitorIntervalMilliseconds: Int = 1_000
+        processMonitorIntervalMilliseconds: Int = 1_000,
+        systemMonitorIntervalMilliseconds: Int = 1_000,
+        showSystemMonitorInSidebar: Bool = true,
+        showOverviewInSidebar: Bool = false,
+        lgLiveSyncEnabled: Bool = true,
+        lgLiveSyncIntervalSeconds: Int = 5,
+        tvPowerToggleShortcut: GlobalKeyboardShortcut = .defaultTVPowerToggle
     ) {
         self.launchAtLogin = launchAtLogin
         self.startHidden = startHidden
@@ -22,6 +105,124 @@ public struct NativeAppSettings: Codable, Sendable, Equatable {
         self.checkForUpdates = checkForUpdates
         self.logLevel = logLevel
         self.processMonitorIntervalMilliseconds = max(100, processMonitorIntervalMilliseconds)
+        self.systemMonitorIntervalMilliseconds = Self.clampedSystemMonitorInterval(
+            systemMonitorIntervalMilliseconds
+        )
+        self.showSystemMonitorInSidebar = showSystemMonitorInSidebar
+        self.showOverviewInSidebar = showOverviewInSidebar
+        self.lgLiveSyncEnabled = lgLiveSyncEnabled
+        self.lgLiveSyncIntervalSeconds = Self.clampedLGLiveSyncInterval(lgLiveSyncIntervalSeconds)
+        self.tvPowerToggleShortcut = tvPowerToggleShortcut
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case launchAtLogin
+        case startHidden
+        case minimizeToMenuBar
+        case checkForUpdates
+        case logLevel
+        case processMonitorIntervalMilliseconds
+        case systemMonitorIntervalMilliseconds
+        case showSystemMonitorInSidebar
+        case showOverviewInSidebar
+        case lgLiveSyncEnabled
+        case lgLiveSyncIntervalSeconds
+        case tvPowerToggleShortcut
+        // Kept only for decoding snapshots written by the previous two-binding UI.
+        case tvPowerOnShortcut
+        case tvPowerOffShortcut
+    }
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.init(
+            launchAtLogin: try container.decodeIfPresent(Bool.self, forKey: .launchAtLogin) ?? false,
+            startHidden: try container.decodeIfPresent(Bool.self, forKey: .startHidden) ?? false,
+            minimizeToMenuBar: try container.decodeIfPresent(Bool.self, forKey: .minimizeToMenuBar) ?? true,
+            checkForUpdates: try container.decodeIfPresent(Bool.self, forKey: .checkForUpdates) ?? true,
+            logLevel: try container.decodeIfPresent(String.self, forKey: .logLevel) ?? "info",
+            processMonitorIntervalMilliseconds: try container.decodeIfPresent(
+                Int.self,
+                forKey: .processMonitorIntervalMilliseconds
+            ) ?? 1_000,
+            systemMonitorIntervalMilliseconds: try container.decodeIfPresent(
+                Int.self,
+                forKey: .systemMonitorIntervalMilliseconds
+            ) ?? 1_000,
+            showSystemMonitorInSidebar: try container.decodeIfPresent(
+                Bool.self,
+                forKey: .showSystemMonitorInSidebar
+            ) ?? true,
+            showOverviewInSidebar: try container.decodeIfPresent(
+                Bool.self,
+                forKey: .showOverviewInSidebar
+            ) ?? false,
+            lgLiveSyncEnabled: try container.decodeIfPresent(Bool.self, forKey: .lgLiveSyncEnabled) ?? true,
+            lgLiveSyncIntervalSeconds: try container.decodeIfPresent(
+                Int.self,
+                forKey: .lgLiveSyncIntervalSeconds
+            ) ?? 5,
+            tvPowerToggleShortcut: Self.migratedTVPowerToggleShortcut(from: container)
+        )
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(launchAtLogin, forKey: .launchAtLogin)
+        try container.encode(startHidden, forKey: .startHidden)
+        try container.encode(minimizeToMenuBar, forKey: .minimizeToMenuBar)
+        try container.encode(checkForUpdates, forKey: .checkForUpdates)
+        try container.encode(logLevel, forKey: .logLevel)
+        try container.encode(processMonitorIntervalMilliseconds, forKey: .processMonitorIntervalMilliseconds)
+        try container.encode(systemMonitorIntervalMilliseconds, forKey: .systemMonitorIntervalMilliseconds)
+        try container.encode(showSystemMonitorInSidebar, forKey: .showSystemMonitorInSidebar)
+        try container.encode(showOverviewInSidebar, forKey: .showOverviewInSidebar)
+        try container.encode(lgLiveSyncEnabled, forKey: .lgLiveSyncEnabled)
+        try container.encode(lgLiveSyncIntervalSeconds, forKey: .lgLiveSyncIntervalSeconds)
+        try container.encode(tvPowerToggleShortcut, forKey: .tvPowerToggleShortcut)
+    }
+
+    private static func migratedTVPowerToggleShortcut(
+        from container: KeyedDecodingContainer<CodingKeys>
+    ) -> GlobalKeyboardShortcut {
+        if let current = try? container.decode(
+            GlobalKeyboardShortcut.self,
+            forKey: .tvPowerToggleShortcut
+        ) {
+            return current
+        }
+
+        let oldPowerOn = try? container.decode(
+            GlobalKeyboardShortcut.self,
+            forKey: .tvPowerOnShortcut
+        )
+        let oldPowerOff = try? container.decode(
+            GlobalKeyboardShortcut.self,
+            forKey: .tvPowerOffShortcut
+        )
+
+        // A snapshot containing the old defaults should adopt the new friendly
+        // default. For a customized pair, keep the old power-on binding as the
+        // least surprising single toggle until the user changes it.
+        if oldPowerOn == .some(.legacyDefaultTVPowerOn)
+            && oldPowerOff == .some(.legacyDefaultTVPowerOff) {
+            return .defaultTVPowerToggle
+        }
+        return oldPowerOn ?? .defaultTVPowerToggle
+    }
+
+    public static func clampedLGLiveSyncInterval(_ seconds: Int) -> Int {
+        min(
+            maximumLGLiveSyncIntervalSeconds,
+            max(minimumLGLiveSyncIntervalSeconds, seconds)
+        )
+    }
+
+    public static func clampedSystemMonitorInterval(_ milliseconds: Int) -> Int {
+        min(
+            maximumSystemMonitorIntervalMilliseconds,
+            max(minimumSystemMonitorIntervalMilliseconds, milliseconds)
+        )
     }
 }
 
@@ -138,19 +339,13 @@ public actor NativeStore {
     public let directoryURL: URL
     public let snapshotURL: URL
 
-    private let fileManager: FileManagerBox
-
-    public init(
-        directoryURL: URL,
-        fileManager: FileManager = .default
-    ) {
+    public init(directoryURL: URL) {
         self.directoryURL = directoryURL
         self.snapshotURL = directoryURL.appendingPathComponent("ColorControl.json")
-        self.fileManager = FileManagerBox(fileManager)
     }
 
-    public static func makeDefault(fileManager: FileManager = .default) -> NativeStore? {
-        guard let applicationSupport = fileManager.urls(
+    public static func makeDefault() -> NativeStore? {
+        guard let applicationSupport = FileManager.default.urls(
             for: .applicationSupportDirectory,
             in: .userDomainMask
         ).first else {
@@ -158,13 +353,19 @@ public actor NativeStore {
         }
 
         return NativeStore(
-            directoryURL: applicationSupport.appendingPathComponent("ColorControl", isDirectory: true),
-            fileManager: fileManager
+            directoryURL: applicationSupport.appendingPathComponent("ColorControl", isDirectory: true)
         )
     }
 
     public func load() throws -> NativeStoreSnapshot? {
-        guard fileManager.value.fileExists(atPath: snapshotURL.path) else { return nil }
+        let fileManager = FileManager.default
+        guard fileManager.fileExists(atPath: snapshotURL.path) else { return nil }
+        try hardenPermissions(at: directoryURL, permissions: 0o700)
+        try hardenPermissions(at: snapshotURL, permissions: 0o600)
+        let backupURL = directoryURL.appendingPathComponent("ColorControl.json.bak")
+        if fileManager.fileExists(atPath: backupURL.path) {
+            try hardenPermissions(at: backupURL, permissions: 0o600)
+        }
         let data = try Data(contentsOf: snapshotURL)
         let snapshot = try JSONDecoder().decode(NativeStoreSnapshot.self, from: data)
         guard snapshot.schemaVersion <= NativeStoreSnapshot.currentSchemaVersion else {
@@ -184,22 +385,25 @@ public actor NativeStore {
     }
 
     public func save(_ snapshot: NativeStoreSnapshot) throws {
+        let fileManager = FileManager.default
         do {
-            try fileManager.value.createDirectory(
+            try fileManager.createDirectory(
                 at: directoryURL,
                 withIntermediateDirectories: true
             )
+            try hardenPermissions(at: directoryURL, permissions: 0o700)
         } catch {
             throw NativeStoreError.directoryCreationFailed
         }
 
-        if fileManager.value.fileExists(atPath: snapshotURL.path) {
+        if fileManager.fileExists(atPath: snapshotURL.path) {
             let backupURL = directoryURL.appendingPathComponent("ColorControl.json.bak")
             do {
-                if fileManager.value.fileExists(atPath: backupURL.path) {
-                    try fileManager.value.removeItem(at: backupURL)
+                if fileManager.fileExists(atPath: backupURL.path) {
+                    try fileManager.removeItem(at: backupURL)
                 }
-                try fileManager.value.copyItem(at: snapshotURL, to: backupURL)
+                try fileManager.copyItem(at: snapshotURL, to: backupURL)
+                try hardenPermissions(at: backupURL, permissions: 0o600)
             } catch {
                 throw NativeStoreError.backupFailed
             }
@@ -209,13 +413,13 @@ public actor NativeStore {
         encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
         let data = try encoder.encode(snapshot)
         try data.write(to: snapshotURL, options: .atomic)
+        try hardenPermissions(at: snapshotURL, permissions: 0o600)
     }
-}
 
-private final class FileManagerBox: @unchecked Sendable {
-    let value: FileManager
-
-    init(_ value: FileManager) {
-        self.value = value
+    private func hardenPermissions(at url: URL, permissions: Int) throws {
+        try FileManager.default.setAttributes(
+            [.posixPermissions: permissions],
+            ofItemAtPath: url.path
+        )
     }
 }

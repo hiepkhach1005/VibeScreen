@@ -2,7 +2,33 @@
 
 ## Current state
 
-No macOS build has been run. The current environment is Windows. Build/signing/notarization evidence must be collected on a Mac with stable Xcode.
+Xcode 27.0 (27A266a) and Swift 6.4 are selected on macOS 27.0/arm64. On
+2026-09-30, `Scripts/build-dev-app.sh` rebuilt the SwiftPM development app bundle
+and replaced `$HOME/Documents/ColorControlMac.app`. The latest strict
+code-sign verification passed; installed executable SHA-256 is
+`c09b4a62bc4e0f639f704b2d7df1e87e8dc1f3a082c6c133d19ed62c542d3778`. The
+replaced bundle is retained at
+`$HOME/Documents/.ColorControlMac-replace-autodismiss-20260930/ColorControlMac.previous.app`.
+Launch Services startup smoke confirmed it stays alive as a menu-bar app with
+no main window. Left/right-click popover activation and Open-window behavior
+were previously confirmed. The latest build closes the popover on activation
+of another app, but updated-build UI verification remains pending because an
+unrelated Gatekeeper dialog blocked accessibility interaction. XCTest, Xcode
+archive, distribution signing, entitlements, and notarization remain
+unverified.
+
+`Scripts/build-dev-app.sh` assembles the SwiftPM binary into a development
+`ColorControlMac.app` with the committed bundle identifier and Local Network
+usage description. The script explicitly compiles the debug-only
+`COLORCONTROL_DEVELOPMENT_FILE_CREDENTIALS` mode, which stores newly paired TV
+credentials in owner-only plaintext files under Application Support and avoids
+Keychain access during local hardware work. It uses ad-hoc signing and never
+queries a signing identity from Keychain. File mode also never reads or deletes
+an older Keychain TV credential, so the TV must be approved once when no file
+exists. A normal debug build and every release build use Keychain; reconnecting
+with one of those builds moves a development-file credential back and deletes
+the file. This remains a local hardware-test artifact, not a substitute for an
+Xcode archive, Developer ID signature, or notarization.
 
 ## Development build
 
@@ -30,6 +56,7 @@ No macOS build has been run. The current environment is Windows. Build/signing/n
 - Gatekeeper assessment.
 - Notarization acceptance and ticket verification.
 - Migration upgrade test preserving Application Support and Keychain.
+- Verify release compilation cannot select development-file credential mode.
 - Real-Mac menu bar, Login Item, permission, sleep/wake, display and profile smoke tests.
 - Opt-in hardware matrix for LG/Samsung and external displays.
 - Known limitations/release notes match actual artifact.

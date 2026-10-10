@@ -38,7 +38,7 @@ public enum LegacyDeviceImporter {
             return DeviceMigrationReport(
                 source: source,
                 devices: [],
-                issues: [MigrationIssue(severity: .error, source: source, message: "Expected a device array or an object containing Devices."))]
+                issues: [MigrationIssue(severity: .error, source: source, message: "Expected a device array or an object containing Devices.")]
             )
         }
 

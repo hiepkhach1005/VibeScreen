@@ -25,7 +25,10 @@ Continue from the `Current stopping point` recorded in `migration/PROGRESS.md`. 
 - Do not migrate NVIDIA or AMD modules, models, UI, commands, or dependencies.
 - Preserve and verify all applicable LG WebOS, Samsung Tizen, Wake-on-LAN, presets, automation, power/session/display events, game launcher, display, and color-profile behavior.
 - Use documented public Apple APIs. Record unsupported parity explicitly; never hide it behind private APIs or fragile shell commands.
-- Store secrets in Keychain and never in source, fixtures, JSON, or logs.
+- Store secrets in Keychain by default and for all production builds.
+- For local development only, allow an explicitly enabled credential file under the user's Application Support directory.
+- The credential file must use owner-only permissions (`0600`), must never be committed, synchronized, logged, included in fixtures, or stored inside the repository.
+- Clearly warn the user that file-based credential storage is less secure and provide a way to delete or migrate it back to Keychain.
 
 ## Repository skills
 

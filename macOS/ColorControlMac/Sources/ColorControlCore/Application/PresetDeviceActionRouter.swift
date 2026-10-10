@@ -13,18 +13,22 @@ public protocol PresetDisplayController: Sendable {
 /// success while silently doing nothing.
 public actor PresetDeviceActionRouter: PresetActionExecutor {
     private var controllers: [UUID: any TVDeviceController] = [:]
+    private var manuallyPoweredOffDeviceIDs: Set<UUID> = []
     private let wakeOnLAN: (any WakeOnLANSender)?
     private let applicationLauncher: (any PresetApplicationLauncher)?
     private let displayController: (any PresetDisplayController)?
+    private let diagnostics: (any PowerDiagnosticRecording)?
 
     public init(
         wakeOnLAN: (any WakeOnLANSender)? = nil,
         applicationLauncher: (any PresetApplicationLauncher)? = nil,
-        displayController: (any PresetDisplayController)? = nil
+        displayController: (any PresetDisplayController)? = nil,
+        diagnostics: (any PowerDiagnosticRecording)? = nil
     ) {
         self.wakeOnLAN = wakeOnLAN
         self.applicationLauncher = applicationLauncher
         self.displayController = displayController
+        self.diagnostics = diagnostics
     }
 
     public func register(_ controller: any TVDeviceController) async {
@@ -34,6 +38,37 @@ public actor PresetDeviceActionRouter: PresetActionExecutor {
 
     public func removeAll() {
         controllers.removeAll()
+        manuallyPoweredOffDeviceIDs.removeAll()
+    }
+
+    /// Keeps event-triggered presets from undoing an explicit remote or
+    /// shortcut power-off. Automatic screen-sleep actions do not call this;
+    /// they remain free to restore the screen on the matching wake event.
+    public func recordManualPowerAction(_ command: TVPowerCommand, for deviceID: UUID) async {
+        switch command {
+        case .powerOff, .screenOff:
+            manuallyPoweredOffDeviceIDs.insert(deviceID)
+        case .powerOn, .screenOn:
+            manuallyPoweredOffDeviceIDs.remove(deviceID)
+        }
+        let isLatchedOff = manuallyPoweredOffDeviceIDs.contains(deviceID)
+        await diagnostics?.record(
+            kind: "presetRouter.manualLatch.updated",
+            details: [
+                "command": command.rawValue,
+                "deviceID": deviceID.uuidString,
+                "manualOffLatched": String(isLatchedOff)
+            ]
+        )
+    }
+
+    public func execute(_ command: TVCommand, target: String) async throws {
+        let selected = try await selectedControllers(matching: target)
+        if case .powerOn = command {
+            try await wake(selected)
+        } else {
+            try await execute(command, on: selected)
+        }
     }
 
     public func execute(_ action: PresetStepAction) async throws {
@@ -154,6 +189,11 @@ public actor PresetDeviceActionRouter: PresetActionExecutor {
             return .setVolume(volume)
         case "mute":
             return .mute((value ?? "true").lowercased() == "true" || value == "1" || value == "on")
+        case "brightness", "backlight", "contrast", "color":
+            guard let value, let settingValue = Int(value), (0...100).contains(settingValue) else {
+                throw ColorControlCoreError.actionRejected("\(name) needs a value from 0 through 100.")
+            }
+            return .setPictureSetting(name: name.lowercased(), value: settingValue)
         case "launch", "launchapplication":
             guard let value, !value.isEmpty else {
                 throw ColorControlCoreError.actionRejected("LaunchApplication needs an identifier.")
@@ -175,12 +215,29 @@ public actor PresetDeviceActionRouter: PresetActionExecutor {
     }
 
     private func wake(_ controllers: [any TVDeviceController]) async throws {
+        var eligible: [TVDeviceDescriptor] = []
+        var suppressedDeviceIDs: [String] = []
+        for controller in controllers {
+            let descriptor = await controller.deviceDescriptor()
+            guard !manuallyPoweredOffDeviceIDs.contains(descriptor.id) else {
+                suppressedDeviceIDs.append(descriptor.id.uuidString)
+                continue
+            }
+            eligible.append(descriptor)
+        }
+        await diagnostics?.record(
+            kind: "presetRouter.wol.evaluated",
+            details: [
+                "eligibleDeviceIDs": eligible.map { $0.id.uuidString }.joined(separator: ","),
+                "suppressedManualOffDeviceIDs": suppressedDeviceIDs.joined(separator: ",")
+            ]
+        )
+        guard !eligible.isEmpty else { return }
         guard let wakeOnLAN else {
             throw ColorControlCoreError.actionRejected("Wake-on-LAN is unavailable.")
         }
 
-        for controller in controllers {
-            let descriptor = await controller.deviceDescriptor()
+        for descriptor in eligible {
             guard let macAddress = descriptor.macAddress, !macAddress.isEmpty else {
                 throw ColorControlCoreError.actionRejected(
                     "Device \(descriptor.name) has no MAC address for Wake-on-LAN."
@@ -191,6 +248,10 @@ public actor PresetDeviceActionRouter: PresetActionExecutor {
                 broadcastAddress: "255.255.255.255",
                 port: 9
             )
+            await diagnostics?.record(
+                kind: "presetRouter.wol.succeeded",
+                details: ["deviceID": descriptor.id.uuidString]
+            )
         }
     }
 
@@ -198,7 +259,21 @@ public actor PresetDeviceActionRouter: PresetActionExecutor {
         _ command: TVCommand,
         on controllers: [any TVDeviceController]
     ) async throws {
-        for controller in controllers {
+        let eligibleControllers: [any TVDeviceController]
+        switch command {
+        case .powerOn, .screenOn:
+            var filtered: [any TVDeviceController] = []
+            for controller in controllers {
+                let descriptor = await controller.deviceDescriptor()
+                guard !manuallyPoweredOffDeviceIDs.contains(descriptor.id) else { continue }
+                filtered.append(controller)
+            }
+            eligibleControllers = filtered
+        default:
+            eligibleControllers = controllers
+        }
+
+        for controller in eligibleControllers {
             try await controller.connect()
             do {
                 try await controller.execute(command)

@@ -1,5 +1,6 @@
 import AppKit
 import ColorControlCore
+import CoreGraphics
 import Foundation
 
 /// Bridges documented NSWorkspace/AppKit notifications into the core event
@@ -10,9 +11,13 @@ final class MacPlatformEventSource {
     let events: AsyncStream<PlatformSignal>
 
     private let continuation: AsyncStream<PlatformSignal>.Continuation
+    private let diagnostics: (any PowerDiagnosticRecording)?
     private var observers: [(NotificationCenter, NSObjectProtocol)] = []
+    private var pendingScreenWakeTasks: [UUID: Task<Void, Never>] = [:]
+    private var diagnosticTasks: [UUID: Task<Void, Never>] = [:]
 
-    init() {
+    init(diagnostics: (any PowerDiagnosticRecording)? = nil) {
+        self.diagnostics = diagnostics
         let stream = AsyncStream<PlatformSignal>.makeStream()
         events = stream.stream
         continuation = stream.continuation
@@ -21,7 +26,7 @@ final class MacPlatformEventSource {
         observe(workspaceCenter, name: NSWorkspace.willSleepNotification, kind: .willSleep)
         observe(workspaceCenter, name: NSWorkspace.didWakeNotification, kind: .didWake)
         observe(workspaceCenter, name: NSWorkspace.screensDidSleepNotification, kind: .screensDidSleep)
-        observe(workspaceCenter, name: NSWorkspace.screensDidWakeNotification, kind: .screensDidWake)
+        observeScreenWake(workspaceCenter)
         observe(workspaceCenter, name: NSWorkspace.willPowerOffNotification, kind: .willPowerOff)
         observe(workspaceCenter, name: NSWorkspace.sessionDidResignActiveNotification, kind: .sessionDidResignActive)
         observe(workspaceCenter, name: NSWorkspace.sessionDidBecomeActiveNotification, kind: .sessionDidBecomeActive)
@@ -35,10 +40,15 @@ final class MacPlatformEventSource {
             kind: .displayConfigurationChanged
         )
 
+        recordDiagnostic(kind: "platform.signal.emitted", details: ["signal": "startup"])
         continuation.yield(PlatformSignal(kind: .startup, context: makeContext()))
     }
 
     func stop() {
+        pendingScreenWakeTasks.values.forEach { $0.cancel() }
+        pendingScreenWakeTasks.removeAll()
+        diagnosticTasks.values.forEach { $0.cancel() }
+        diagnosticTasks.removeAll()
         observers.forEach { item in
             item.0.removeObserver(item.1)
         }
@@ -59,8 +69,79 @@ final class MacPlatformEventSource {
         observers.append((center, observer))
     }
 
+    private func observeScreenWake(_ center: NotificationCenter) {
+        let observer = center.addObserver(
+            forName: NSWorkspace.screensDidWakeNotification,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            Task { @MainActor [weak self] in
+                self?.validateScreenWakeUserIntent()
+            }
+        }
+        observers.append((center, observer))
+    }
+
+    private func validateScreenWakeUserIntent() {
+        let validationID = UUID()
+        recordDiagnostic(
+            kind: "platform.screenWake.received",
+            details: ["validationID": validationID.uuidString]
+        )
+
+        let task = Task { @MainActor [weak self] in
+            do {
+                // Give the physical input event that woke the screen time to
+                // reach the current user session before measuring idle time.
+                try await Task.sleep(nanoseconds: 1_000_000_000)
+            } catch {
+                return
+            }
+            guard let self, !Task.isCancelled else { return }
+
+            let inputAge = CGEventSource.secondsSinceLastEventType(
+                .combinedSessionState,
+                eventType: .null
+            )
+            let shouldForward = ScreenWakeUserIntentPolicy.shouldForwardScreenWake(
+                secondsSinceLastUserInput: inputAge
+            )
+            recordDiagnostic(
+                kind: shouldForward
+                    ? "platform.screenWake.forwarded"
+                    : "platform.screenWake.suppressedNoRecentInput",
+                details: [
+                    "validationID": validationID.uuidString,
+                    "inputAgeSeconds": String(format: "%.3f", inputAge),
+                    "maximumInputAgeSeconds": String(
+                        ScreenWakeUserIntentPolicy.defaultMaximumInputAgeSeconds
+                    )
+                ]
+            )
+            pendingScreenWakeTasks.removeValue(forKey: validationID)
+            guard shouldForward else { return }
+            emit(.screensDidWake)
+        }
+        pendingScreenWakeTasks[validationID] = task
+    }
+
     private func emit(_ kind: PlatformSignalKind) {
+        if kind == .screensDidSleep {
+            pendingScreenWakeTasks.values.forEach { $0.cancel() }
+            pendingScreenWakeTasks.removeAll()
+        }
+        recordDiagnostic(kind: "platform.signal.emitted", details: ["signal": kind.rawValue])
         continuation.yield(PlatformSignal(kind: kind, context: makeContext()))
+    }
+
+    private func recordDiagnostic(kind: String, details: [String: String]) {
+        guard let diagnostics else { return }
+        let taskID = UUID()
+        let task = Task { @MainActor [weak self, diagnostics] in
+            await diagnostics.record(kind: kind, details: details)
+            self?.diagnosticTasks.removeValue(forKey: taskID)
+        }
+        diagnosticTasks[taskID] = task
     }
 
     private func makeContext() -> AutomationEventContext {

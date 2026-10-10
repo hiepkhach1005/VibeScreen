@@ -13,10 +13,18 @@ public enum TVConnectionState: String, Codable, Sendable, Equatable {
     case failed
 }
 
+public enum TVPowerState: String, Codable, Sendable, Equatable {
+    case on
+    case off
+    case unknown
+}
+
 public struct TVPowerPolicy: Codable, Sendable, Equatable {
     public var powerOnAfterStartup: Bool
     public var powerOnAfterResume: Bool
     public var powerOffOnShutdown: Bool
+    public var turnScreenOffOnShutdown: Bool
+    public var turnScreenOnAfterStartup: Bool
     public var powerOffOnStandby: Bool
     public var powerOffOnScreenSaver: Bool
     public var powerOnAfterScreenSaver: Bool
@@ -32,6 +40,8 @@ public struct TVPowerPolicy: Codable, Sendable, Equatable {
         powerOnAfterStartup: Bool = false,
         powerOnAfterResume: Bool = false,
         powerOffOnShutdown: Bool = false,
+        turnScreenOffOnShutdown: Bool = false,
+        turnScreenOnAfterStartup: Bool = false,
         powerOffOnStandby: Bool = false,
         powerOffOnScreenSaver: Bool = false,
         powerOnAfterScreenSaver: Bool = false,
@@ -46,6 +56,8 @@ public struct TVPowerPolicy: Codable, Sendable, Equatable {
         self.powerOnAfterStartup = powerOnAfterStartup
         self.powerOnAfterResume = powerOnAfterResume
         self.powerOffOnShutdown = powerOffOnShutdown
+        self.turnScreenOffOnShutdown = turnScreenOffOnShutdown
+        self.turnScreenOnAfterStartup = turnScreenOnAfterStartup
         self.powerOffOnStandby = powerOffOnStandby
         self.powerOffOnScreenSaver = powerOffOnScreenSaver
         self.powerOnAfterScreenSaver = powerOnAfterScreenSaver
@@ -57,6 +69,45 @@ public struct TVPowerPolicy: Codable, Sendable, Equatable {
         self.screenSaverMinimumDuration = max(0, screenSaverMinimumDuration)
         self.triggersEnabled = triggersEnabled
     }
+
+    private enum CodingKeys: String, CodingKey {
+        case powerOnAfterStartup
+        case powerOnAfterResume
+        case powerOffOnShutdown
+        case turnScreenOffOnShutdown
+        case turnScreenOnAfterStartup
+        case powerOffOnStandby
+        case powerOffOnScreenSaver
+        case powerOnAfterScreenSaver
+        case powerOnAfterManualPowerOff
+        case powerOffAfterSessionLock
+        case powerOnAfterSessionUnlock
+        case turnScreenOffOnScreenSaver
+        case turnScreenOnAfterScreenSaver
+        case screenSaverMinimumDuration
+        case triggersEnabled
+    }
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.init(
+            powerOnAfterStartup: try container.decodeIfPresent(Bool.self, forKey: .powerOnAfterStartup) ?? false,
+            powerOnAfterResume: try container.decodeIfPresent(Bool.self, forKey: .powerOnAfterResume) ?? false,
+            powerOffOnShutdown: try container.decodeIfPresent(Bool.self, forKey: .powerOffOnShutdown) ?? false,
+            turnScreenOffOnShutdown: try container.decodeIfPresent(Bool.self, forKey: .turnScreenOffOnShutdown) ?? false,
+            turnScreenOnAfterStartup: try container.decodeIfPresent(Bool.self, forKey: .turnScreenOnAfterStartup) ?? false,
+            powerOffOnStandby: try container.decodeIfPresent(Bool.self, forKey: .powerOffOnStandby) ?? false,
+            powerOffOnScreenSaver: try container.decodeIfPresent(Bool.self, forKey: .powerOffOnScreenSaver) ?? false,
+            powerOnAfterScreenSaver: try container.decodeIfPresent(Bool.self, forKey: .powerOnAfterScreenSaver) ?? false,
+            powerOnAfterManualPowerOff: try container.decodeIfPresent(Bool.self, forKey: .powerOnAfterManualPowerOff) ?? false,
+            powerOffAfterSessionLock: try container.decodeIfPresent(Bool.self, forKey: .powerOffAfterSessionLock) ?? false,
+            powerOnAfterSessionUnlock: try container.decodeIfPresent(Bool.self, forKey: .powerOnAfterSessionUnlock) ?? false,
+            turnScreenOffOnScreenSaver: try container.decodeIfPresent(Bool.self, forKey: .turnScreenOffOnScreenSaver) ?? false,
+            turnScreenOnAfterScreenSaver: try container.decodeIfPresent(Bool.self, forKey: .turnScreenOnAfterScreenSaver) ?? false,
+            screenSaverMinimumDuration: try container.decodeIfPresent(Int.self, forKey: .screenSaverMinimumDuration) ?? 0,
+            triggersEnabled: try container.decodeIfPresent(Bool.self, forKey: .triggersEnabled) ?? true
+        )
+    }
 }
 
 public struct TVDeviceDescriptor: Codable, Sendable, Equatable, Identifiable {
@@ -67,6 +118,7 @@ public struct TVDeviceDescriptor: Codable, Sendable, Equatable, Identifiable {
     public var macAddress: String?
     public var usesSecureConnection: Bool
     public var credentialReference: String?
+    public var trustedCertificateSHA256: String?
     public var powerPolicy: TVPowerPolicy
 
     public init(
@@ -77,6 +129,7 @@ public struct TVDeviceDescriptor: Codable, Sendable, Equatable, Identifiable {
         macAddress: String? = nil,
         usesSecureConnection: Bool = false,
         credentialReference: String? = nil,
+        trustedCertificateSHA256: String? = nil,
         powerPolicy: TVPowerPolicy = TVPowerPolicy()
     ) {
         self.id = id
@@ -86,6 +139,7 @@ public struct TVDeviceDescriptor: Codable, Sendable, Equatable, Identifiable {
         self.macAddress = macAddress
         self.usesSecureConnection = usesSecureConnection
         self.credentialReference = credentialReference
+        self.trustedCertificateSHA256 = trustedCertificateSHA256
         self.powerPolicy = powerPolicy
     }
 }
@@ -110,17 +164,39 @@ public struct TVPowerAction: Codable, Sendable, Equatable {
 public enum TVPowerPolicyEngine {
     public static func actions(
         for signal: PlatformSignalKind,
-        device: TVDeviceDescriptor
+        device: TVDeviceDescriptor,
+        manualPowerOff: Bool = false
     ) -> [TVPowerAction] {
         guard device.powerPolicy.triggersEnabled else { return [] }
         let policy = device.powerPolicy
 
         switch signal {
         case .startup:
-            return policy.powerOnAfterStartup ? [TVPowerAction(command: .powerOn)] : []
+            if policy.turnScreenOnAfterStartup {
+                return automaticPowerOnActions(
+                    enabled: true,
+                    command: .screenOn,
+                    policy: policy,
+                    manualPowerOff: manualPowerOff
+                )
+            }
+            return automaticPowerOnActions(
+                enabled: policy.powerOnAfterStartup,
+                command: .powerOn,
+                policy: policy,
+                manualPowerOff: manualPowerOff
+            )
         case .didWake:
-            return policy.powerOnAfterResume ? [TVPowerAction(command: .powerOn)] : []
+            return automaticPowerOnActions(
+                enabled: policy.powerOnAfterResume,
+                command: .powerOn,
+                policy: policy,
+                manualPowerOff: manualPowerOff
+            )
         case .willPowerOff:
+            if policy.turnScreenOffOnShutdown {
+                return [TVPowerAction(command: .screenOff)]
+            }
             return policy.powerOffOnShutdown ? [TVPowerAction(command: .powerOff)] : []
         case .willSleep:
             return policy.powerOffOnStandby ? [TVPowerAction(command: .powerOff)] : []
@@ -130,16 +206,42 @@ public enum TVPowerPolicyEngine {
             return [TVPowerAction(command: command, delaySeconds: policy.screenSaverMinimumDuration)]
         case .screensDidWake:
             if policy.turnScreenOffOnScreenSaver && policy.turnScreenOnAfterScreenSaver {
-                return [TVPowerAction(command: .screenOn)]
+                return automaticPowerOnActions(
+                    enabled: true,
+                    command: .screenOn,
+                    policy: policy,
+                    manualPowerOff: manualPowerOff
+                )
             }
-            return policy.powerOnAfterScreenSaver ? [TVPowerAction(command: .powerOn)] : []
+            return automaticPowerOnActions(
+                enabled: policy.powerOnAfterScreenSaver,
+                command: .powerOn,
+                policy: policy,
+                manualPowerOff: manualPowerOff
+            )
         case .sessionDidResignActive:
             return policy.powerOffAfterSessionLock ? [TVPowerAction(command: .powerOff)] : []
         case .sessionDidBecomeActive:
-            return policy.powerOnAfterSessionUnlock ? [TVPowerAction(command: .powerOn)] : []
+            return automaticPowerOnActions(
+                enabled: policy.powerOnAfterSessionUnlock,
+                command: .powerOn,
+                policy: policy,
+                manualPowerOff: manualPowerOff
+            )
         case .applicationActivityChanged, .displayConfigurationChanged:
             return []
         }
+    }
+
+    private static func automaticPowerOnActions(
+        enabled: Bool,
+        command: TVPowerCommand,
+        policy: TVPowerPolicy,
+        manualPowerOff: Bool
+    ) -> [TVPowerAction] {
+        guard enabled else { return [] }
+        guard !manualPowerOff || policy.powerOnAfterManualPowerOff else { return [] }
+        return [TVPowerAction(command: command)]
     }
 }
 
@@ -152,6 +254,19 @@ public enum TVCommand: Sendable, Equatable {
     case volumeDown
     case setVolume(Int)
     case mute(Bool)
+    case setPictureSetting(name: String, value: Int)
+    case setLGSystemSetting(category: String, name: String, value: JSONValue)
+    case reboot
+    case mediaPlay
+    case mediaPause
+    case mediaStop
+    case channelUp
+    case channelDown
+    case setInput(String)
+    case openURL(String)
+    case closeApplication(String)
+    case setLGOLEDProtection(name: String, enabled: Bool)
+    case setLGHDMIIcon(port: Int, icon: String, label: String)
     case remoteKey(String)
     case launchApplication(identifier: String, parameters: JSONValue?)
 }
@@ -161,6 +276,9 @@ public enum TVProtocolError: Error, LocalizedError, Sendable, Equatable {
     case unsupportedCommand(TVCommand)
     case malformedMessage
     case pairingRequired
+    case pairingTimedOut
+    case powerStateUnavailable
+    case untrustedCertificate(fingerprint: String)
     case transportUnavailable
     case remoteFailure(String)
 
@@ -170,8 +288,56 @@ public enum TVProtocolError: Error, LocalizedError, Sendable, Equatable {
         case let .unsupportedCommand(command): return "The command is not supported by this adapter: \(command)."
         case .malformedMessage: return "The device returned a malformed protocol message."
         case .pairingRequired: return "The device requires pairing before it can be controlled."
+        case .pairingTimedOut: return "Pairing timed out. Approve the request on the TV, then try again."
+        case .powerStateUnavailable:
+            return "The TV power state could not be determined. No power-off command was sent."
+        case let .untrustedCertificate(fingerprint):
+            return "The TV presented an untrusted certificate with SHA-256 fingerprint \(fingerprint). Verify it, then explicitly trust it to continue."
         case .transportUnavailable: return "The device transport is unavailable."
         case let .remoteFailure(message): return message
+        }
+    }
+}
+
+public enum LGPowerStateParser {
+    public static func parse(_ value: JSONValue) -> TVPowerState? {
+        guard case let .object(root) = value else { return nil }
+        let payload: [String: JSONValue]
+        if case let .object(nested)? = root["payload"] {
+            payload = nested
+        } else {
+            payload = root
+        }
+        guard case let .string(rawState)? = payload["state"] else { return nil }
+
+        switch normalized(rawState) {
+        case "active", "on", "power_on": return .on
+        case "poweroff", "power_off", "off", "standby", "active_standby", "screenoff", "screen_off", "suspend": return .off
+        default: return .unknown
+        }
+    }
+
+    private static func normalized(_ value: String) -> String {
+        value
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+            .lowercased()
+            .replacingOccurrences(of: " ", with: "_")
+            .replacingOccurrences(of: "-", with: "_")
+    }
+}
+
+public enum SamsungPowerStateParser {
+    public static func parse(_ value: JSONValue) -> TVPowerState? {
+        guard case let .object(root) = value,
+              case let .object(device)? = root["device"],
+              case let .string(rawState)? = device["PowerState"] else {
+            return nil
+        }
+
+        switch rawState.trimmingCharacters(in: .whitespacesAndNewlines).lowercased() {
+        case "on", "active": return .on
+        case "off", "standby", "sleep": return .off
+        default: return .unknown
         }
     }
 }
@@ -257,19 +423,20 @@ public enum LGWebOSRegistration {
                     .string("READ_INPUT_DEVICE_LIST"),
                     .string("READ_TV_CHANNEL_LIST"),
                     .string("READ_SETTINGS"),
+                    .string("READ_COUNTRY_INFO"),
+                    .string("WRITE_NOTIFICATION_TOAST"),
                     .string("CONTROL_AUDIO"),
                     .string("CONTROL_DISPLAY"),
                     .string("CONTROL_INPUT_JOYSTICK"),
                     .string("CONTROL_INPUT_MEDIA_PLAYBACK"),
                     .string("CONTROL_INPUT_TV"),
                     .string("CONTROL_TV_SCREEN"),
-                    .string("READ_APP_STATUS"),
                     .string("LAUNCH"),
                     .string("LAUNCH_WEBAPP"),
                     .string("APP_TO_APP"),
                     .string("CLOSE")
-                ],
-                "serial": useLegacyHandshake ? "2f930e2d2cfe083771f68e4fe7bb07" : "colorcontrol-webos26"
+                ]),
+                "serial": .string(useLegacyHandshake ? "2f930e2d2cfe083771f68e4fe7bb07" : "colorcontrol-webos26")
             ]),
             "permissions": .array([
                 .string("LAUNCH"),
@@ -323,12 +490,30 @@ public enum LGWebOSRegistration {
 
 public enum LGWebOSCommand: Sendable, Equatable {
     case powerOff
+    case getPowerState
     case screenOff
     case screenOn
     case volumeUp
     case volumeDown
     case setVolume(Int)
     case mute(Bool)
+    case pictureSettingAlert(name: String, value: Int)
+    case systemSettingAlert(category: String, name: String, value: JSONValue)
+    case closeAlert(identifier: String)
+    case reboot
+    case mediaPlay
+    case mediaPause
+    case mediaStop
+    case channelUp
+    case channelDown
+    case setInput(String)
+    case openURL(String)
+    case getSystemSettings(category: String, keys: [String])
+    case getVolume
+    case listApplications
+    case listInputs
+    case closeApplication(String)
+    case lunaActionAlert(uri: String, payload: JSONValue)
     case launchApplication(identifier: String, parameters: JSONValue?)
     case remote(uri: String, payload: JSONValue?)
 
@@ -336,6 +521,11 @@ public enum LGWebOSCommand: Sendable, Equatable {
         switch self {
         case .powerOff:
             return factory.makeRequest(uri: "ssap://system/turnOff")
+        case .getPowerState:
+            return factory.makeRequest(
+                uri: "ssap://com.webos.service.tvpower/power/getPowerState",
+                type: "subscribe"
+            )
         case .screenOff:
             return factory.makeRequest(uri: "ssap://com.webos.service.tvpower/power/turnOffScreen")
         case .screenOn:
@@ -354,6 +544,95 @@ public enum LGWebOSCommand: Sendable, Equatable {
                 uri: "ssap://audio/setMute",
                 payload: .object(["mute": .bool(value)])
             )
+        case let .pictureSettingAlert(name, value):
+            return Self.systemSettingAlert(
+                category: "picture",
+                name: name,
+                value: .string(String(max(0, min(100, value))))
+            ).makeRequest(using: &factory)
+        case let .systemSettingAlert(category, name, value):
+            let settings = Self.systemSettingsPayload(category: category, name: name, value: value)
+            let action: JSONValue = .object([
+                "uri": .string("luna://com.webos.settingsservice/setSystemSettings"),
+                "params": settings
+            ])
+            return factory.makeRequest(
+                uri: "ssap://system.notifications/createAlert",
+                payload: .object([
+                    "message": .string("Applying picture setting…"),
+                    "buttons": .array([.object([
+                        "label": .string(""),
+                        "onClick": .string("luna://com.webos.settingsservice/setSystemSettings"),
+                        "params": settings
+                    ])]),
+                    "onclose": action,
+                    "onfail": action
+                ])
+            )
+        case .reboot:
+            return factory.makeRequest(uri: "ssap://com.webos.service.tvpower/power/reboot")
+        case .mediaPlay:
+            return factory.makeRequest(uri: "ssap://media.controls/play")
+        case .mediaPause:
+            return factory.makeRequest(uri: "ssap://media.controls/pause")
+        case .mediaStop:
+            return factory.makeRequest(uri: "ssap://media.controls/stop")
+        case .channelUp:
+            return factory.makeRequest(uri: "ssap://tv/channelUp")
+        case .channelDown:
+            return factory.makeRequest(uri: "ssap://tv/channelDown")
+        case let .setInput(identifier):
+            return factory.makeRequest(
+                uri: "ssap://tv/switchInput",
+                payload: .object(["inputId": .string(identifier)])
+            )
+        case let .openURL(url):
+            return factory.makeRequest(
+                uri: "ssap://system.launcher/open",
+                payload: .object(["target": .string(url)])
+            )
+        case let .getSystemSettings(category, keys):
+            return factory.makeRequest(
+                uri: "ssap://settings/getSystemSettings",
+                payload: .object([
+                    "category": .string(category),
+                    "keys": .array(keys.map(JSONValue.string))
+                ])
+            )
+        case .getVolume:
+            return factory.makeRequest(uri: "ssap://audio/getVolume")
+        case .listApplications:
+            return factory.makeRequest(
+                uri: "ssap://com.webos.applicationManager/listApps",
+                payload: .object([:])
+            )
+        case .listInputs:
+            return factory.makeRequest(uri: "ssap://tv/getExternalInputList")
+        case let .closeApplication(identifier):
+            return factory.makeRequest(
+                uri: "ssap://system.launcher/close",
+                payload: .object(["id": .string(identifier)])
+            )
+        case let .lunaActionAlert(uri, parameters):
+            let action: JSONValue = .object(["uri": .string(uri), "params": parameters])
+            return factory.makeRequest(
+                uri: "ssap://system.notifications/createAlert",
+                payload: .object([
+                    "message": .string("Applying advanced setting…"),
+                    "buttons": .array([.object([
+                        "label": .string(""),
+                        "onClick": .string(uri),
+                        "params": parameters
+                    ])]),
+                    "onclose": action,
+                    "onfail": action
+                ])
+            )
+        case let .closeAlert(identifier):
+            return factory.makeRequest(
+                uri: "ssap://system.notifications/closeAlert",
+                payload: .object(["alertId": .string(identifier)])
+            )
         case let .launchApplication(identifier, parameters):
             var payload: [String: JSONValue] = ["id": .string(identifier)]
             if let parameters {
@@ -366,6 +645,98 @@ public enum LGWebOSCommand: Sendable, Equatable {
         case let .remote(uri, payload):
             return factory.makeRequest(uri: uri, payload: payload)
         }
+    }
+
+    /// Reproduces the legacy `ParamToJson` setting semantics without accepting
+    /// arbitrary Luna URIs from the presentation layer.
+    public static func systemSettingsPayload(
+        category: String,
+        name: String,
+        value: JSONValue
+    ) -> JSONValue {
+        var settingName = name
+        var settingValue = value
+
+        if name == "blackLevel", case let .string(level) = value {
+            settingValue = .object(Dictionary(uniqueKeysWithValues: [
+                "ntsc", "ntsc443", "pal", "pal60", "palm", "paln", "secam", "unknown"
+            ].map { ($0, .string(level)) }))
+        } else if let separator = name.firstIndex(of: "_") {
+            settingName = String(name[..<separator])
+            let child = String(name[name.index(after: separator)...])
+            settingValue = .object([child: normalizedSettingValue(value)])
+        } else {
+            settingValue = normalizedSettingValue(value)
+        }
+
+        var payload: [String: JSONValue] = [
+            "category": .string(category),
+            "settings": .object([settingName: settingValue])
+        ]
+        if name == "truMotionMode" {
+            payload["current_app"] = .bool(true)
+        }
+        return .object(payload)
+    }
+
+    private static func normalizedSettingValue(_ value: JSONValue) -> JSONValue {
+        guard case let .string(raw) = value else { return value }
+        if raw == "true" { return .bool(true) }
+        if raw == "false" { return .bool(false) }
+        if raw.hasPrefix("bool_") { return .bool(raw == "bool_true") }
+        if raw.hasPrefix("_") { return .string(String(raw.dropFirst())) }
+        return value
+    }
+}
+
+/// Normalizes the volume field returned by different webOS firmware versions.
+/// Most TVs return a JSON number, while some bridges/firmware revisions expose
+/// a numeric string or wrap the value in a small object.
+public enum LGVolumeValueParser {
+    public static func parse(_ value: JSONValue?) -> Int? {
+        guard let value else { return nil }
+
+        let parsed: Int?
+        switch value {
+        case let .number(number):
+            parsed = boundedInteger(number)
+        case let .string(string):
+            let trimmed = string.trimmingCharacters(in: .whitespacesAndNewlines)
+            if let integer = Int(trimmed) {
+                parsed = integer
+            } else if let number = Double(trimmed) {
+                parsed = boundedInteger(number)
+            } else {
+                parsed = nil
+            }
+        case let .object(object):
+            // Recent webOS versions wrap the scalar in `volumeStatus`, e.g.
+            // `{ "payload": { "volumeStatus": { "volume": 15 } } }`.
+            // Keep the direct keys first, then follow the known response
+            // wrappers used by different firmware/bridge implementations.
+            parsed = [
+                "volume", "currentVolume", "masterVolume", "value", "level",
+                "volumeStatus", "status", "result", "data", "payload"
+            ]
+                .lazy
+                .compactMap { object[$0] }
+                .compactMap(parse)
+                .first
+        case let .array(values):
+            parsed = values.first.flatMap(parse)
+        default:
+            parsed = nil
+        }
+
+        guard let parsed else { return nil }
+        return min(max(parsed, 0), 100)
+    }
+
+    private static func boundedInteger(_ number: Double) -> Int? {
+        guard number.isFinite else { return nil }
+        let rounded = number.rounded()
+        guard rounded >= Double(Int.min), rounded <= Double(Int.max) else { return nil }
+        return Int(rounded)
     }
 }
 
@@ -477,6 +848,24 @@ public struct SamsungWebSocketEndpoint: Sendable, Equatable {
             queryItems.append(URLQueryItem(name: "token", value: token))
         }
         components.queryItems = queryItems
+        return components.url
+    }
+}
+
+public struct SamsungPowerStateEndpoint: Sendable, Equatable {
+    public let host: String
+
+    public init(host: String) {
+        self.host = host
+    }
+
+    public var url: URL? {
+        guard !host.isEmpty else { return nil }
+        var components = URLComponents()
+        components.scheme = "http"
+        components.host = host
+        components.port = 8001
+        components.path = "/api/v2/"
         return components.url
     }
 }

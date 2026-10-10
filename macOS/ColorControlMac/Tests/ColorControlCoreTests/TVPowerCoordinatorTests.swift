@@ -65,6 +65,45 @@ final class TVPowerCoordinatorTests: XCTestCase {
         XCTAssertEqual(results[0].status, .failed)
         XCTAssertEqual(results[0].actions[0].message, TVPowerCoordinatorError.missingMacAddress.localizedDescription)
     }
+
+    func testManualPowerOffSuppressesResumeUntilExplicitPowerOn() async {
+        let descriptor = TVDeviceDescriptor(
+            name: "Living room",
+            kind: .lgWebOS,
+            host: "192.168.1.20",
+            macAddress: "AA:BB:CC:DD:EE:FF",
+            powerPolicy: TVPowerPolicy(
+                powerOnAfterResume: true,
+                powerOnAfterScreenSaver: true
+            )
+        )
+        let controller = RecordingTVController(descriptor: descriptor)
+        let wakeOnLAN = RecordingWakeOnLAN()
+        let coordinator = TVPowerPolicyCoordinator(
+            wakeOnLAN: wakeOnLAN,
+            clock: ImmediatePowerClock()
+        )
+        await coordinator.register(controller)
+        await coordinator.recordManualPowerAction(.powerOff, for: descriptor.id)
+        let isManuallyPoweredOff = await coordinator.isManuallyPoweredOff(deviceID: descriptor.id)
+        XCTAssertTrue(isManuallyPoweredOff)
+
+        let resumeResults = await coordinator.handle(signal: .didWake)
+        let screenWakeResults = await coordinator.handle(signal: .screensDidWake)
+        let suppressedAddresses = await wakeOnLAN.addresses()
+        XCTAssertTrue(resumeResults.isEmpty)
+        XCTAssertTrue(screenWakeResults.isEmpty)
+        XCTAssertTrue(suppressedAddresses.isEmpty)
+
+        await coordinator.recordManualPowerAction(.powerOn, for: descriptor.id)
+        let isManuallyPoweredOn = await coordinator.isManuallyPoweredOff(deviceID: descriptor.id)
+        XCTAssertFalse(isManuallyPoweredOn)
+        let results = await coordinator.handle(signal: .didWake)
+
+        XCTAssertEqual(results.count, 1)
+        let addresses = await wakeOnLAN.addresses()
+        XCTAssertEqual(addresses, ["AA:BB:CC:DD:EE:FF"])
+    }
 }
 
 private struct ImmediatePowerClock: TVPowerActionClock {
