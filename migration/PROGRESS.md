@@ -2884,3 +2884,11 @@ Never replace earlier entries. Append new evidence and update `Current status` p
 - Created a verified local Git bundle backup and rebuilt the initial commit without the generated SARIF report or the prior company author email. Personal home-directory paths in native/migration documentation now use `$HOME`.
 - Public-repository handling must keep old cached commits private unless the owner explicitly accepts their exposure.
 - Exact next safe step: publish the reviewed `main` branch using the owner-approved GitHub repository handling, then verify remote commit IDs and visibility.
+
+### 2026-10-10 — Isolate the original private repository before publication
+
+- The owner approved retaining the original GitHub repository as a private backup and creating a fresh public ScreenPilot repository from sanitized `main`.
+- A force push removed the generated SARIF report and company author email from reachable history, but GitHub still served the old commit by SHA. The original repository must remain private to prevent exposing that cache.
+- The fresh public repository receives only the sanitized initial commit and reviewed native-source/documentation commits. The public origin URL remains `https://github.com/hiepkhach1005/ScreenPilot.git`.
+- Publication verification checks repository visibility/identity, remote `main` and README hashes, clean worktree, absence of SARIF from branch history, and noreply author metadata. App build/test suites are not part of this repository-management follow-up.
+- Exact next development step: continue the previously recorded opt-in LG pairing and pointer-remote hardware checks; avoid power automation unless those TV actions are intended.
