@@ -14,5 +14,7 @@
 	<string>VibeScreen uses your local network to discover and control configured TVs.</string>
 	<key>NSHumanReadableCopyright</key>
 	<string>VibeScreen</string>
+	<key>NSHumanReadableCopyright</key>
+	<string>© 2026 Bá Vương. All rights reserved.</string>
 </dict>
 </plist>
