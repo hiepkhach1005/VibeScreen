@@ -51,13 +51,7 @@ final class MenuBarStatusItemController: NSObject, NSPopoverDelegate {
         popover.contentViewController = hostingController
 
         guard let button = statusItem.button else { return }
-        if let iconURL = Bundle.main.url(forResource: "VibeScreenIcon", withExtension: "icns"),
-           let icon = NSImage(contentsOf: iconURL) {
-            icon.size = NSSize(width: 20, height: 20)
-            button.image = icon
-        } else {
-            button.image = NSImage(systemSymbolName: "tv", accessibilityDescription: "VibeScreen")
-        }
+        button.image = MenuBarIcon.make()
         button.imagePosition = .imageOnly
         button.toolTip = "VibeScreen"
         button.setAccessibilityLabel("VibeScreen menu")
