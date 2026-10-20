@@ -12,7 +12,7 @@ remains the compact traceability map; the checklist is the active close-out list
 
 | Legacy path | Legacy type/symbol | Responsibility | New module/path | Semantic differences | Audit status |
 |---|---|---|---|---|---|
-| `ColorControl/Program.cs` | `Program.MainAsync`, `RunApp`, `CreateHostBuilder` | Config, logger, single instance, DI, GUI/service mode, Blazor startup | `macOS/ColorControlMac/App/ColorControlMacApp.swift`, `App/CompositionRoot.swift` | No Windows Service, mutex, WinForms loop, or web server; user-session app/menu bar | Mapped |
+| `ColorControl/Program.cs` | `Program.MainAsync`, `RunApp`, `CreateHostBuilder` | Config, logger, single instance, DI, GUI/service mode, Blazor startup | `macOS/VibeScreen/App/VibeScreenApp.swift`, `App/CompositionRoot.swift` | No Windows Service, mutex, WinForms loop, or web server; user-session app/menu bar | Mapped |
 | `ColorControl/Program.cs` | `LoadConfig`, `InitLogger` | JSON settings and file logging | `Infrastructure/Persistence`, `Infrastructure/Logging` | Application Support + Codable/OSLog; no NLog file as primary store | Mapped |
 | `ColorControl/MainWorker.cs` | `DoWork`, `Init` | Register event handlers, menu icon, modules, startup, UI loop | `App/AppLifecycleCoordinator.swift`, `Platform/macOS/*` | Replace message-only window and Windows notifications with public macOS adapters | Mapped |
 | `ColorControl/MainWorker.cs` | `HandlePowerBroadcastEvent` | Monitor off/on events | `Platform/macOS/Power` | API availability and display sleep semantics require Mac verification | Mapped |

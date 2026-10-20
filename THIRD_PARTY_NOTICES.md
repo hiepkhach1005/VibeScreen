@@ -18,7 +18,7 @@ restored verbatim from ColorControl commit `d0d3bb4682c483b0b2c14a794958abf2d142
 
 Other component-level copyright and license headers remain in their original
 source files. No original Windows source or artwork was rebranded or edited
-during publication. ScreenPilot is an independent macOS rewrite and is not
+during publication. VibeScreen is an independent macOS rewrite and is not
 an official Maassoft release.
 
 ## Little CMS

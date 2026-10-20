@@ -13,7 +13,7 @@ This is the durable handoff file for all future AI and human work sessions.
 
 ## Current stopping point
 
-The native Swift package under `macOS/ColorControlMac/` previously compiled as
+The native Swift package under `macOS/VibeScreen/` previously compiled as
 a debug executable on macOS 26.6.1 with Swift 6.3.3 and launched successfully
 as a live process. The first Mac build fixed SwiftPM Info.plist handling, four
 pre-existing core syntax/concurrency diagnostics, current CoreGraphics display
@@ -75,13 +75,13 @@ delegate repeats this idempotent cleanup from `applicationWillTerminate` for
 other Quit routes such as the Dock.
 
 The development bundle was rebuilt with the explicit file-credential flag and
-replaced at `$HOME/Documents/ColorControlMac.app`. The prior installed
+replaced at `$HOME/Documents/VibeScreen.app`. The prior installed
 bundle is retained at
-`$HOME/Documents/.ColorControlMac-replace-autodismiss-20260930/ColorControlMac.previous.app`.
+`$HOME/Documents/.VibeScreen-replace-autodismiss-20260930/VibeScreen.previous.app`.
 The installed app's strict code-sign verification passed and its executable
 SHA-256 matches the latest SwiftPM build
 (`c09b4a62bc4e0f639f704b2d7df1e87e8dc1f3a082c6c133d19ed62c542d3778`).
-The pre-existing `ColorControlMac.zip` was not rebuilt. The generated `.build`
+The pre-existing `VibeScreen.zip` was not rebuilt. The generated `.build`
 directory contains the development bundle. The local ad-hoc signature is not
 a Developer ID/notarized distribution build.
 
@@ -135,7 +135,7 @@ run.
 - Inspected the repository root and identified the original projects and assets.
 - Created:
   - `legacy-windows/`
-  - `macOS/ColorControlMac/`
+  - `macOS/VibeScreen/`
   - `migration/`
 - Moved these original items into `legacy-windows/`:
   - `ColorControl/`
@@ -229,7 +229,7 @@ Initial inspection identified these important legacy areas. They still need to b
 
 Execute in this order:
 
-1. Move `macOS/ColorControlMac/` to a Mac build machine and run package tests.
+1. Move `macOS/VibeScreen/` to a Mac build machine and run package tests.
 2. Fix Swift 6/SDK availability issues and produce the first Xcode app build.
 3. Exercise LG registration/pairing, pointer remote, subscriptions, and commands.
 4. Exercise Samsung token flow, response state machine, keys, and reconnects.
@@ -260,13 +260,13 @@ Never replace earlier entries. Append new evidence and update `Current status` p
 - Environment: Windows, `C:\\wsrc\\ColorControl-master`; Swift/Xcode unavailable.
 - Objective: begin the native rewrite from the audited source without changing `legacy-windows/`.
 - Completed:
-  - Created Swift Package Manager manifest with `ColorControlCore`, executable app target, and tests.
+  - Created Swift Package Manager manifest with `VibeScreenCore`, executable app target, and tests.
   - Added typed preset/trigger models, legacy step parser, actor executor with retry/cancellation, repository, and automation router.
   - Added LG WebOS/Samsung Tizen request builders, endpoint mapping, generic URLSession WebSocket boundary, WOL packet builder, TV power-policy mapper, and Keychain boundary.
   - Added versioned atomic native store and dry-run LG/Samsung preset/device importers with stable IDs, GPU omission warnings, and secret redirection to Keychain references.
   - Added SwiftUI window, MenuBarExtra, Liquid Glass availability path with material fallback, settings/navigation shell, and NSWorkspace/AppKit event bridge.
   - Added host-independent tests for parser, executor, trigger matching, protocol shapes, WOL, power policy, and migration importers.
-- Files changed: `macOS/ColorControlMac/` native sources/tests; migration architecture/status/tasks/roadmap/NEXUS/parity docs; this progress handoff.
+- Files changed: `macOS/VibeScreen/` native sources/tests; migration architecture/status/tasks/roadmap/NEXUS/parity docs; this progress handoff.
 - Commands/tests and results: source audits with `rg`/PowerShell completed; TODO scan clean; Swift compiler not installed, so `swift test` and Xcode build not run.
 - Decisions made: keep the first executor as a safe preview adapter; do not claim real TV or hardware parity until Mac build and device tests pass; keep secrets out of JSON.
 - Open issues/blockers: Mac SDK/Xcode required; full LG/Samsung state machines, display/HDR/ColorSync, game launcher, global hotkeys, OSLog, signing, and hardware evidence remain.
@@ -285,11 +285,11 @@ Never replace earlier entries. Append new evidence and update `Current status` p
   - Added LG registration response polling and the legacy pointer-input WebSocket for remote buttons; preserved Samsung remote-key transport.
   - Expanded SwiftUI UI with preset CRUD/editor, TV device/power-policy editor, game launch surface, display inventory, MenuBarExtra quick access, Liquid Glass availability path, and accessibility-friendly empty/error states.
   - Added host-independent tests for parser edge cases, preset target mapping, router/WOL, TV power coordination, game/migration/store/protocol behavior.
-- Files changed: `macOS/ColorControlMac/` native sources/tests; migration status, architecture, task, roadmap, NEXUS, and parity documents.
+- Files changed: `macOS/VibeScreen/` native sources/tests; migration status, architecture, task, roadmap, NEXUS, and parity documents.
 - Commands/tests and results: PowerShell source audit, brace balance, XML validation, exclusion scan, and legacy integrity checks completed; `47` Swift files totaling `228,746` bytes are present; `swift test` and Xcode build were not run because Swift/Xcode are absent.
 - Decisions made: keep no web UI, .NET, NVIDIA, or AMD concepts in the new target; use documented public macOS APIs; keep credentials in Keychain; preserve unknown legacy actions as traceable failures; do not call hardware parity complete before Mac build/device evidence.
 - Open issues/blockers: Mac SDK/compiler unavailable; LG/Samsung live pairing/reconnect/subscriptions, process-trigger auto game apply, global shortcuts, ColorSync profile association, full remote UI, signing/notarization, and hardware evidence remain.
-- Exact next safe step: on macOS run `swift test`, open `macOS/ColorControlMac/Package.swift` in Xcode, resolve SDK/compiler diagnostics, then test LG pairing → pointer remote → power/WOL → Samsung pairing → display/color.
+- Exact next safe step: on macOS run `swift test`, open `macOS/VibeScreen/Package.swift` in Xcode, resolve SDK/compiler diagnostics, then test LG pairing → pointer remote → power/WOL → Samsung pairing → display/color.
 
 ### 2026-08-11 - Static quality handoff after native vertical-slice expansion
 
@@ -298,7 +298,7 @@ Never replace earlier entries. Append new evidence and update `Current status` p
   protocols; this reduces Swift 6 strict-concurrency risk.
 - Fixed the native TV editor's `TVPowerPolicy` initializer argument order and
   verified command-status interpolation in the app container.
-- Added `macOS/ColorControlMac/ColorControlMac.entitlements` with App Sandbox
+- Added `macOS/VibeScreen/VibeScreen.entitlements` with App Sandbox
   and outgoing network-client capability. It must be selected by the Xcode app
   target during signing; Swift Package Manager does not apply it automatically.
 - Added native remote controls for the bounded LG pointer/Samsung key paths,
@@ -324,7 +324,7 @@ Never replace earlier entries. Append new evidence and update `Current status` p
   `swift-format`, and `sourcekit-lsp` are unavailable on this Windows host.
   No Swift test, app build, signing, Keychain, TV pairing, sleep/wake, WOL, or
   display-hardware claim has been made.
-- Exact next step: move/open `macOS/ColorControlMac/Package.swift` on macOS,
+- Exact next step: move/open `macOS/VibeScreen/Package.swift` on macOS,
   run `swift test`, build the executable in Xcode with the entitlements file,
   fix SDK/concurrency diagnostics, then exercise LG pairing/pointer input,
   Samsung token/key flow, WOL, sleep/session power policy, and display/color
@@ -391,13 +391,13 @@ Never replace earlier entries. Append new evidence and update `Current status` p
   - Built the debug executable and launched it through Launch Services; the
     native process remained live as PID 8167 and CoreGraphics reported two
     on-screen windows during the smoke check.
-- Files changed: `.gitignore`; `Package.swift`; four `ColorControlCore` source files; two
-  `ColorControlMac/Platform` source files; NEXUS, build/release, feature parity,
+- Files changed: `.gitignore`; `Package.swift`; four `VibeScreenCore` source files; two
+  `VibeScreen/Platform` source files; NEXUS, build/release, feature parity,
   and this progress handoff.
 - Commands/tests and results:
   - `swift --version`: Apple Swift 6.3.3, arm64-apple-macosx26.0.
   - `swift build`: passed with no compiler warnings; debug executable linked.
-  - `open .../.build/arm64-apple-macosx/debug/ColorControlMac`: launched;
+  - `open .../.build/arm64-apple-macosx/debug/VibeScreen`: launched;
     `pgrep`/`ps` confirmed the process remained running and the public
     CoreGraphics window list reported two visible windows for its PID.
   - `swift test`: core/app compilation progressed after source fixes but test
@@ -413,7 +413,7 @@ Never replace earlier entries. Append new evidence and update `Current status` p
   display hardware behavior was exercised in this smoke run.
 - Exact next safe step: install/select full Xcode, rerun `swift test`, then build
   an Xcode application target using `Resources/Info.plist` and
-  `ColorControlMac.entitlements` before LG/Samsung hardware testing.
+  `VibeScreen.entitlements` before LG/Samsung hardware testing.
 
 ### 2026-08-15 — Restore keyboard focus in Add TV
 
@@ -426,9 +426,9 @@ Never replace earlier entries. Append new evidence and update `Current status` p
   - Added a main-actor `NSApplicationDelegate` bridge at the SwiftUI composition
     root to select regular activation policy and activate the application after
     launch.
-  - Rebuilt, terminated only the old ColorControlMac process, and launched the
+  - Rebuilt, terminated only the old VibeScreen process, and launched the
     new binary. Runtime inspection reported `active=true`, `policy=regular`.
-- Files changed: `Sources/ColorControlMac/App/ColorControlMacApp.swift`, feature
+- Files changed: `Sources/VibeScreen/App/VibeScreenApp.swift`, feature
   parity matrix, and this progress handoff.
 - Commands/tests and results:
   - `swift build`: passed with no compiler warnings.
@@ -478,7 +478,7 @@ Never replace earlier entries. Append new evidence and update `Current status` p
   - `swift build`: passed with no warnings.
   - `swift build -c release`: passed with no warnings.
   - `Scripts/build-dev-app.sh`: produced an ad-hoc signed
-    `.build/ColorControlMac.app`; `codesign --verify --deep --strict` passed.
+    `.build/VibeScreen.app`; `codesign --verify --deep --strict` passed.
   - Runtime PID 9217 reported regular activation policy and bundle identifier
     `com.colorcontrol.mac`; Local Network usage text is present in the bundle.
   - `swift test`: test sources were expanded, but execution remains blocked
@@ -731,7 +731,7 @@ Never replace earlier entries. Append new evidence and update `Current status` p
   - `swift build -Xswiftc -DCOLORCONTROL_DEVELOPMENT_FILE_CREDENTIALS`: passed.
   - `swift build -c release`: passed after the Keychain-isolation change.
   - `Scripts/build-dev-app.sh`: passed with ad-hoc signing.
-  - `codesign --verify --strict --verbose=2 .build/ColorControlMac.app`: passed.
+  - `codesign --verify --strict --verbose=2 .build/VibeScreen.app`: passed.
   - `swift test`: remains blocked at compilation because this Command Line
     Tools installation has no `XCTest` module; no test-pass claim is made.
   - New file-mode app process launched successfully. No credential file exists
@@ -1138,7 +1138,7 @@ Never replace earlier entries. Append new evidence and update `Current status` p
   - `swift build -c release`: passed with no warnings.
   - `Scripts/build-dev-app.sh`: passed; development app assembled and
     development credential warning emitted as expected.
-  - `codesign --verify --strict --deep .../ColorControlMac.app` and
+  - `codesign --verify --strict --deep .../VibeScreen.app` and
     `git diff --check`: passed.
   - `swift test --filter ProtocolAndWakeTests`: blocked before test execution
     because Command Line Tools does not provide `XCTest`; no test-pass claim
@@ -1176,7 +1176,7 @@ Never replace earlier entries. Append new evidence and update `Current status` p
   - `swift build -c release`: passed with no warnings.
   - `Scripts/build-dev-app.sh`: passed; development app assembled and
     ad-hoc-signed.
-  - `codesign --verify --strict --deep .../ColorControlMac.app` and
+  - `codesign --verify --strict --deep .../VibeScreen.app` and
     `git diff --check`: passed.
   - Runtime screenshot review confirmed disclosure arrows for Remote/media and
     Game & HDMI in the LG detail; Advanced uses the same component below.
@@ -1219,7 +1219,7 @@ Never replace earlier entries. Append new evidence and update `Current status` p
     and does not request Accessibility or Input Monitoring permission.
   - Added cleanup for partial registration failures and visible conflict/error
     reporting without logging device identity or credentials.
-- Files changed: `ColorControlMacApp.swift`, `MenuBarView.swift`,
+- Files changed: `VibeScreenApp.swift`, `MenuBarView.swift`,
   `AppContainer.swift`, new `MacGlobalTVShortcutManager.swift`, platform/UI/
   parity/security/NEXUS documentation, and this handoff. Existing unrelated
   user changes were preserved; `legacy-windows/` remained read-only.
@@ -1369,7 +1369,7 @@ Never replace earlier entries. Append new evidence and update `Current status` p
     app from `Scripts/build-dev-app.sh`.
   - Excluded packaging-only icon files from SwiftPM source discovery so builds
     remain warning-free.
-- Files changed: `ColorControlMacApp.swift`, `ColorControlMark.swift`,
+- Files changed: `VibeScreenApp.swift`, `ColorControlMark.swift`,
   `Package.swift`, `Info.plist`, `Scripts/render-app-icon.swift`,
   `Scripts/build-dev-app.sh`, `Resources/AppIcon.iconset/`,
   `Resources/ColorControlIcon.icns`, `UI_DESIGN_SYSTEM.md`,
@@ -1384,7 +1384,7 @@ Never replace earlier entries. Append new evidence and update `Current status` p
     signed with the icon resource copied into `Contents/Resources`.
   - `plutil`, `file`, and `codesign --verify --strict --deep`: passed; the
     bundle reports `CFBundleIconFile=ColorControlIcon.icns` and a valid icon.
-  - App launch smoke check: `open .build/ColorControlMac.app` succeeded and
+  - App launch smoke check: `open .build/VibeScreen.app` succeeded and
     the process remained running.
   - `git diff --check`: passed.
   - `swift test --filter NativeStoreTests`: blocked before test execution
@@ -1416,11 +1416,11 @@ Never replace earlier entries. Append new evidence and update `Current status` p
   - Rebuilt, relaunched, and captured the Mac desktop: Dock now shows the
     blue/purple ColorControl monitor mark and the menu bar shows the compact
     monitor/control mark.
-- Files changed: `ColorControlMacApp.swift` and this handoff. Existing
+- Files changed: `VibeScreenApp.swift` and this handoff. Existing
   unrelated user changes were preserved; `legacy-windows/` remained read-only.
 - Commands/tests and results:
   - `Scripts/build-dev-app.sh`: passed; app rebuilt and ad-hoc-signed.
-  - `open .build/ColorControlMac.app`: passed; process remained running.
+  - `open .build/VibeScreen.app`: passed; process remained running.
   - `screencapture` plus visual inspection: confirmed the new Dock icon and
     menu-bar mark are visible.
   - `git diff --check`: passed.
@@ -1446,12 +1446,12 @@ Never replace earlier entries. Append new evidence and update `Current status` p
     available.
   - Rebuilt, relaunched, and visually verified the status bar: the blue/purple
     ColorControl icon and `ColorControl` name are both visible.
-- Files changed: `ColorControlMacApp.swift`, `ColorControlMark.swift`,
+- Files changed: `VibeScreenApp.swift`, `ColorControlMark.swift`,
   `UI_DESIGN_SYSTEM.md`, `PLATFORM_API_MAP.md`, and this handoff. Existing
   unrelated user changes were preserved; `legacy-windows/` remained read-only.
 - Commands/tests and results:
   - `Scripts/build-dev-app.sh`: passed; debug app rebuilt and ad-hoc-signed.
-  - `open .build/ColorControlMac.app`: passed; process remained running.
+  - `open .build/VibeScreen.app`: passed; process remained running.
   - `screencapture` plus visual inspection: passed; menu bar shows both icon
     and app name.
   - `git diff --check`: passed.
@@ -1471,12 +1471,12 @@ Never replace earlier entries. Append new evidence and update `Current status` p
   - Removed only the status-item text; the packaged 20-point icon remains.
   - Preserved hover help and the combined VoiceOver label (`ColorControl menu`).
   - Rebuilt, relaunched, and visually verified the icon-only status item.
-- Files changed: `ColorControlMacApp.swift`, `UI_DESIGN_SYSTEM.md`,
+- Files changed: `VibeScreenApp.swift`, `UI_DESIGN_SYSTEM.md`,
   `PLATFORM_API_MAP.md`, and this handoff. Existing unrelated user changes were
   preserved; `legacy-windows/` remained read-only.
 - Commands/tests and results:
   - `Scripts/build-dev-app.sh`: passed; app rebuilt and ad-hoc-signed.
-  - `open .build/ColorControlMac.app`: passed; process remained running.
+  - `open .build/VibeScreen.app`: passed; process remained running.
   - `screencapture` plus visual inspection: passed; only the ColorControl icon
     remains in the menu bar.
   - `git diff --check`: passed.
@@ -1580,7 +1580,7 @@ Never replace earlier entries. Append new evidence and update `Current status` p
   - `swift build -c release -Xswiftc -DCOLORCONTROL_DEVELOPMENT_FILE_CREDENTIALS`:
     passed.
   - `Scripts/build-dev-app.sh`: passed; development app rebuilt and
-    ad-hoc-signed, then relaunched from `.build/ColorControlMac.app`.
+    ad-hoc-signed, then relaunched from `.build/VibeScreen.app`.
   - Bundle `plutil` metadata and strict `codesign --verify --strict --deep`:
     passed; `CFBundleIconFile=ColorControlIcon.icns` remains present.
   - `git diff --check`: passed.
@@ -1599,7 +1599,7 @@ Never replace earlier entries. Append new evidence and update `Current status` p
   ColorControl icon/title row while retaining the status-item icon itself.
 - Completed: removed the in-popover icon and `ColorControl` title; loading
   feedback remains beside the Game Bar refresh action.
-- Files changed: `macOS/ColorControlMac/Sources/ColorControlMac/Features/MenuBarView.swift`
+- Files changed: `macOS/VibeScreen/Sources/VibeScreen/Features/MenuBarView.swift`
   and this handoff.
 - Verification: debug build, development app packaging, bundle metadata,
   strict codesign verification, and `git diff --check` passed.
@@ -1767,7 +1767,7 @@ Never replace earlier entries. Append new evidence and update `Current status` p
     activation policy, activate the app, and open the main window again.
   - Kept the real `Quit` action unchanged: choosing Quit terminates the entire
     process, including the menu-bar item.
-- Files changed: `ColorControlMacApp.swift`, `MenuBarView.swift`, and this
+- Files changed: `VibeScreenApp.swift`, `MenuBarView.swift`, and this
   handoff.
 - Commands/tests and results:
   - `swift build -Xswiftc -DCOLORCONTROL_DEVELOPMENT_FILE_CREDENTIALS`: passed.
@@ -1832,7 +1832,7 @@ Never replace earlier entries. Append new evidence and update `Current status` p
     and `stat`: passed; resulting modes are `0700/0600/0600` and only one
     development credential remains.
   - `swift build -Xswiftc -DCOLORCONTROL_DEVELOPMENT_FILE_CREDENTIALS`: passed.
-  - `swiftc -parse Tests/ColorControlCoreTests/NativeStoreTests.swift`: passed.
+  - `swiftc -parse Tests/VibeScreenCoreTests/NativeStoreTests.swift`: passed.
   - `swift test -Xswiftc -DCOLORCONTROL_DEVELOPMENT_FILE_CREDENTIALS`: blocked
     because this machine has Command Line Tools only and no `XCTest` module.
   - `git diff --check`: passed.
@@ -1906,7 +1906,7 @@ Never replace earlier entries. Append new evidence and update `Current status` p
   plus a persisted sampling-interval setting.
 - Completed:
   - Added platform-neutral monitor snapshots and a narrow async sampling
-    protocol in ColorControlCore.
+    protocol in VibeScreenCore.
   - Added an actor-isolated macOS sampler using public Mach host statistics for
     aggregate CPU/RAM, BSD `getifaddrs` counters for download/upload rates,
     Foundation thermal pressure, and IOKit power-source dictionaries.
@@ -1932,7 +1932,7 @@ Never replace earlier entries. Append new evidence and update `Current status` p
 - Commands/tests and results:
   - `swift build`: passed under Swift 6 strict concurrency.
   - `swift build -c release`: passed.
-  - `swiftc -parse Tests/ColorControlCoreTests/NativeStoreTests.swift`: passed.
+  - `swiftc -parse Tests/VibeScreenCoreTests/NativeStoreTests.swift`: passed.
   - `swift test`: blocked by the existing Command Line Tools-only environment;
     `XCTest` is unavailable. No test-pass claim is made.
   - Launched the debug executable and visually inspected the live Monitor at
@@ -1958,7 +1958,7 @@ Never replace earlier entries. Append new evidence and update `Current status` p
   bundle and launch it for the user.
 - Completed: ran `Scripts/build-dev-app.sh`, which rebuilt with the explicit
   `COLORCONTROL_DEVELOPMENT_FILE_CREDENTIALS` flag, refreshed the existing
-  `.build/ColorControlMac.app` bundle, copied the current Info.plist/icon, and
+  `.build/VibeScreen.app` bundle, copied the current Info.plist/icon, and
   replaced its ad-hoc signature. No application data or credential file was
   changed by this session.
 - Commands/tests and results:
@@ -1968,7 +1968,7 @@ Never replace earlier entries. Append new evidence and update `Current status` p
   - Info.plist inspection: bundle ID `com.colorcontrol.mac`, version `0.1.0`
     (`1`), minimum macOS `14.0`, Local Network usage text, and packaged icon are
     present.
-  - Launched `.build/ColorControlMac.app`; process PID `22952` remained running
+  - Launched `.build/VibeScreen.app`; process PID `22952` remained running
     and sleeping at 0.0% CPU after initialization. The on-screen main window
     was present at its 920×690 minimum-size layout.
 - Open issues/blockers: this is an ad-hoc development build using the explicitly
@@ -2007,7 +2007,7 @@ Never replace earlier entries. Append new evidence and update `Current status` p
   - `Scripts/build-dev-app.sh`: passed with the explicit local development
     credential-file flag.
   - `codesign --verify --deep --strict --verbose=2`: passed.
-  - Relaunched `.build/ColorControlMac.app`; PID `24355` remained running and
+  - Relaunched `.build/VibeScreen.app`; PID `24355` remained running and
     the main window appeared at 920×690.
 - Open issues/blockers: the click path was not exercised automatically against
   the configured TV because that would mutate real brightness/volume state.
@@ -2057,7 +2057,7 @@ Never replace earlier entries. Append new evidence and update `Current status` p
   - `swift build -c release`: passed.
   - `Scripts/build-dev-app.sh`: passed with the explicit local development
     credential-file flag.
-  - `codesign --verify --deep --strict --verbose=2 .build/ColorControlMac.app`:
+  - `codesign --verify --deep --strict --verbose=2 .build/VibeScreen.app`:
     passed; the ad-hoc development bundle is valid on disk.
   - `git diff --check`: passed.
   - Replaced the previous development process and relaunched the current app;
@@ -2097,13 +2097,13 @@ Never replace earlier entries. Append new evidence and update `Current status` p
     front. The menu-bar action only calls `openWindow(id: "main")` when no main
     window exists.
   - Kept the menu-bar Settings/quit behavior unchanged.
-- Files changed: `ColorControlMacApp.swift`, `MenuBarView.swift`, and this
+- Files changed: `VibeScreenApp.swift`, `MenuBarView.swift`, and this
   handoff.
 - Commands/tests and results:
   - `swift build`: passed.
   - `swift build -c release`: passed.
   - `Scripts/build-dev-app.sh`: passed.
-  - `codesign --verify --deep --strict --verbose=2 .build/ColorControlMac.app`:
+  - `codesign --verify --deep --strict --verbose=2 .build/VibeScreen.app`:
     passed.
   - `git diff --check`: passed.
   - Relaunched the development app; PID `4922` remained running.
@@ -2124,8 +2124,8 @@ Never replace earlier entries. Append new evidence and update `Current status` p
   - Confirmed no old ColorControl process was running before the clean build.
   - Ran `swift package clean`, rebuilt with `Scripts/build-dev-app.sh` (which
     preserves `COLORCONTROL_DEVELOPMENT_FILE_CREDENTIALS`), and copied the
-    resulting app to `$HOME/Documents/ColorControlMac.app`; created
-    `$HOME/Documents/ColorControlMac.zip` with `ditto` for sharing.
+    resulting app to `$HOME/Documents/VibeScreen.app`; created
+    `$HOME/Documents/VibeScreen.zip` with `ditto` for sharing.
   - Verified the exported app bundle has the expected `com.colorcontrol.mac`
     identifier, version `0.1.0`, macOS 14 minimum, executable, and packaged icon.
   - Verified the exported bundle's ad-hoc signature, then removed the generated
@@ -2136,9 +2136,9 @@ Never replace earlier entries. Append new evidence and update `Current status` p
 - Commands/tests and results:
   - `swift package clean`: passed.
   - `Scripts/build-dev-app.sh`: passed.
-  - `ditto .build/ColorControlMac.app $HOME/Documents/ColorControlMac.app`:
+  - `ditto .build/VibeScreen.app $HOME/Documents/VibeScreen.app`:
     passed.
-  - `codesign --verify --deep --strict --verbose=2 $HOME/Documents/ColorControlMac.app`:
+  - `codesign --verify --deep --strict --verbose=2 $HOME/Documents/VibeScreen.app`:
     passed.
   - `git diff --check`: not rerun after this documentation-only append; prior
     source/build session passed it.
@@ -2148,7 +2148,7 @@ Never replace earlier entries. Append new evidence and update `Current status` p
   Keychain path and should not be uploaded with any credential files.
 - Open issues/blockers: the app is not running after cleanup, as requested;
   full Xcode archive/notarization remains separate from this share build.
-- Exact next safe step: share `$HOME/Documents/ColorControlMac.zip`
+- Exact next safe step: share `$HOME/Documents/VibeScreen.zip`
   (or the `.app` bundle); launch it by double-clicking or with `open` when
   needed.
 
@@ -2177,11 +2177,11 @@ Never replace earlier entries. Append new evidence and update `Current status` p
 - Commands/tests and results:
   - `swift build`: passed.
   - `swift build -c release`: passed.
-  - `swiftc -parse Tests/ColorControlCoreTests/NativeStoreTests.swift`: passed.
+  - `swiftc -parse Tests/VibeScreenCoreTests/NativeStoreTests.swift`: passed.
   - `git diff --check`: passed.
   - `Scripts/build-dev-app.sh`: passed; the ad-hoc bundle was rebuilt and
     re-signed.
-  - `codesign --verify --deep --strict --verbose=2 .build/ColorControlMac.app`:
+  - `codesign --verify --deep --strict --verbose=2 .build/VibeScreen.app`:
     passed.
   - Relaunched the current development app; PID `4251` remained running after
     initialization.
@@ -2216,7 +2216,7 @@ Never replace earlier entries. Append new evidence and update `Current status` p
   - `swift build -c release`: passed.
   - `Scripts/build-dev-app.sh`: passed; the development bundle was rebuilt and
     ad-hoc signed.
-  - `codesign --verify --deep --strict --verbose=2 .build/ColorControlMac.app`:
+  - `codesign --verify --deep --strict --verbose=2 .build/VibeScreen.app`:
     passed.
   - `git diff --check`: passed.
   - `swift test -Xswiftc -DCOLORCONTROL_DEVELOPMENT_FILE_CREDENTIALS`: blocked
@@ -2266,7 +2266,7 @@ Never replace earlier entries. Append new evidence and update `Current status` p
   - `swiftc -parse` for the two changed test files: passed.
   - `Scripts/build-dev-app.sh`: passed; the development bundle was rebuilt and
     ad-hoc signed.
-  - `codesign --verify --deep --strict --verbose=2 .build/ColorControlMac.app`:
+  - `codesign --verify --deep --strict --verbose=2 .build/VibeScreen.app`:
     passed.
   - `git diff --check`: passed.
   - `swift test -Xswiftc -DCOLORCONTROL_DEVELOPMENT_FILE_CREDENTIALS`: blocked
@@ -2283,11 +2283,11 @@ Never replace earlier entries. Append new evidence and update `Current status` p
 ### 2026-08-22 — Rebuild app bundle in Documents
 
 - Rebuilt the development app with `Scripts/build-dev-app.sh` and replaced
-  `$HOME/Documents/ColorControlMac.app` with the current bundle.
+  `$HOME/Documents/VibeScreen.app` with the current bundle.
 - `codesign --verify --deep --strict --verbose=2` passed for the Documents copy.
 - The SHA-256 hash of the executable matches the freshly built executable in
-  `.build/ColorControlMac.app`.
-- Exact next safe step: open `$HOME/Documents/ColorControlMac.app`
+  `.build/VibeScreen.app`.
+- Exact next safe step: open `$HOME/Documents/VibeScreen.app`
   and test the one TV power-toggle shortcut with a paired TV.
 
 ### 2026-08-22 — Recover power-on after TV standby
@@ -2306,7 +2306,7 @@ Never replace earlier entries. Append new evidence and update `Current status` p
     app still never sends PowerOff unless the TV reports `.on`.
   - Updated Settings copy, parity/limitation/design documentation, and added
     coordinator coverage for the manual-off query.
-  - Rebuilt and replaced `$HOME/Documents/ColorControlMac.app`.
+  - Rebuilt and replaced `$HOME/Documents/VibeScreen.app`.
 - Files changed: `TVPowerCoordinator.swift`, `AppContainer.swift`,
   `TVProtocolModels.swift`, `MainWindowView.swift`,
   `TVPowerCoordinatorTests.swift`, related parity/limitation/design docs, and
@@ -2314,12 +2314,12 @@ Never replace earlier entries. Append new evidence and update `Current status` p
 - Commands/tests and results:
   - `swift build -Xswiftc -DCOLORCONTROL_DEVELOPMENT_FILE_CREDENTIALS`: passed.
   - `swift build -c release`: passed.
-  - `swiftc -parse Tests/ColorControlCoreTests/TVPowerCoordinatorTests.swift`:
+  - `swiftc -parse Tests/VibeScreenCoreTests/TVPowerCoordinatorTests.swift`:
     passed.
   - `Scripts/build-dev-app.sh`: passed.
   - `codesign --verify --deep --strict --verbose=2` on the Documents app:
     passed.
-  - Documents executable SHA-256 matches `.build/ColorControlMac.app`.
+  - Documents executable SHA-256 matches `.build/VibeScreen.app`.
   - `swift test -Xswiftc -DCOLORCONTROL_DEVELOPMENT_FILE_CREDENTIALS`: blocked
     before execution because this Command Line Tools installation has no
     `XCTest` module.
@@ -2351,8 +2351,8 @@ Never replace earlier entries. Append new evidence and update `Current status` p
   - Updated platform API, parity, limitation, and NEXUS documentation using the
     installed SDK declaration and Apple documentation for
     `keyAELaunchedAsLogInItem` and `SMAppService.mainApp`.
-  - Rebuilt and replaced `$HOME/Documents/ColorControlMac.app`.
-- Files changed: `ColorControlMacApp.swift`, `AppContainer.swift`,
+  - Rebuilt and replaced `$HOME/Documents/VibeScreen.app`.
+- Files changed: `VibeScreenApp.swift`, `AppContainer.swift`,
   `MainWindowView.swift`, platform/parity/limitation/NEXUS documentation, and
   this handoff.
 - Commands/tests and results:
@@ -2361,7 +2361,7 @@ Never replace earlier entries. Append new evidence and update `Current status` p
   - `Scripts/build-dev-app.sh`: passed.
   - `codesign --verify --deep --strict --verbose=2` on the Documents app:
     passed.
-  - Documents executable SHA-256 matches `.build/ColorControlMac.app`.
+  - Documents executable SHA-256 matches `.build/VibeScreen.app`.
   - `git diff --check`: passed before this handoff append.
   - `swift test -Xswiftc -DCOLORCONTROL_DEVELOPMENT_FILE_CREDENTIALS`: blocked
     before execution because this Command Line Tools installation has no
@@ -2383,7 +2383,7 @@ Never replace earlier entries. Append new evidence and update `Current status` p
 - Objective: determine whether ColorControl or a background helper continues
   waking the display/TV after the user quits the app.
 - Evidence:
-  - No `ColorControlMac` process was present in `ps`/`pgrep` during the
+  - No `VibeScreen` process was present in `ps`/`pgrep` during the
     reported post-Quit state.
   - No ColorControl job was present in the current GUI `launchctl` domain, and
     no ColorControl LaunchAgent or LaunchDaemon file exists in the user/system
@@ -2412,7 +2412,7 @@ Never replace earlier entries. Append new evidence and update `Current status` p
   and `pmset -g assertions/-g log` completed successfully.
 - Exact next safe step: distinguish close from Quit in a manual check. After
   choosing menu-bar Quit, confirm the menu-bar icon disappears and
-  `ColorControlMac` is absent in Activity Monitor; then move the mouse. If the
+  `VibeScreen` is absent in Activity Monitor; then move the mouse. If the
   TV still wakes, inspect TV HDMI-CEC/Quick Start/input-signal behavior because
   ColorControl is no longer able to issue a command.
 
@@ -2435,14 +2435,14 @@ Never replace earlier entries. Append new evidence and update `Current status` p
     the same cleanup path before `NSApplication.terminate`.
   - `applicationWillTerminate` invokes the same idempotent cleanup as a fallback
     for system/Dock termination paths.
-- Files changed: `App/AppContainer.swift`, `App/ColorControlMacApp.swift`,
+- Files changed: `App/AppContainer.swift`, `App/VibeScreenApp.swift`,
   `Features/MenuBarView.swift`, feature/function parity documentation, and this
   handoff.
 - Commands/results:
   - `swift build -Xswiftc -DCOLORCONTROL_DEVELOPMENT_FILE_CREDENTIALS`: passed.
   - `swift build -c release`: passed.
   - `Scripts/build-dev-app.sh`: passed; the rebuilt bundle replaced
-    `$HOME/Documents/ColorControlMac.app`.
+    `$HOME/Documents/VibeScreen.app`.
   - `codesign --verify --deep --strict --verbose=2` on the Documents app:
     passed, and its executable SHA-256 matches the packaged source bundle.
   - `git diff --check`: passed after the implementation and documentation
@@ -2502,7 +2502,7 @@ Never replace earlier entries. Append new evidence and update `Current status` p
   - Added deterministic boundary coverage for recent, stale, and non-finite
     input ages. Updated platform, security, limitations, parity, and function
     documentation.
-  - Rebuilt and replaced `$HOME/Documents/ColorControlMac.app` without
+  - Rebuilt and replaced `$HOME/Documents/VibeScreen.app` without
     launching it; no ColorControl process was running during packaging.
 - Files changed: core power diagnostics and policy/coordinator/router sources;
   macOS platform event, WOL, recorder, and app-container sources;
@@ -2516,7 +2516,7 @@ Never replace earlier entries. Append new evidence and update `Current status` p
     permission change was added.
   - `swift build -Xswiftc -DCOLORCONTROL_DEVELOPMENT_FILE_CREDENTIALS`: passed.
   - `swift build -c release`: passed.
-  - `swiftc -parse Tests/ColorControlCoreTests/PlatformEventsTests.swift`:
+  - `swiftc -parse Tests/VibeScreenCoreTests/PlatformEventsTests.swift`:
     passed.
   - `swift test -Xswiftc -DCOLORCONTROL_DEVELOPMENT_FILE_CREDENTIALS`: blocked
     before test execution because this Command Line Tools installation has no
@@ -2589,7 +2589,7 @@ Never replace earlier entries. Append new evidence and update `Current status` p
     reference, owner-only development credential file, secure-connection flag,
     and pinned certificate remain present; no secret or network address was
     printed or recorded.
-  - The running `$HOME/Documents/ColorControlMac.app` is the older
+  - The running `$HOME/Documents/VibeScreen.app` is the older
     development bundle last modified on 2026-08-17. Its bundle identifier and
     `NSLocalNetworkUsageDescription` are present, but the bundle is ad-hoc
     signed, has no Apple Team ID, and its effective code signature contains no
@@ -2680,19 +2680,19 @@ Never replace earlier entries. Append new evidence and update `Current status` p
   - Policy replacement invalidates the old registration before disconnecting
     the controller. Cancelled automation is reported as cancelled instead of
     completed.
-  - Rebuilt using `macOS/ColorControlMac/Scripts/build-dev-app.sh` and replaced
-    `$HOME/Documents/ColorControlMac.app`. Strict code-sign verification
+  - Rebuilt using `macOS/VibeScreen/Scripts/build-dev-app.sh` and replaced
+    `$HOME/Documents/VibeScreen.app`. Strict code-sign verification
     passed; installed and built executables have the same SHA-256:
     `8f677619828591cd4f53ab7a56ac3025e88369e6c355558aa975962055b8bebe`.
     The replaced bundle was retained at
-`$HOME/Documents/.ColorControlMac-replace-windowscene-20260929/ColorControlMac.previous.app`.
-- Files changed: `ColorControlMacApp.swift`, `TVPowerCoordinator.swift`,
+`$HOME/Documents/.VibeScreen-replace-windowscene-20260929/VibeScreen.previous.app`.
+- Files changed: `VibeScreenApp.swift`, `TVPowerCoordinator.swift`,
   `AppContainer.swift`, `migration/PROGRESS.md`, `migration/docs/NEXUS.md`,
   `migration/docs/BUILD_RELEASE.md`, `migration/docs/FEATURE_PARITY_MATRIX.md`,
   and `migration/docs/FUNCTION_PARITY_CHECKLIST.md`. Existing unrelated
   workspace changes remain untouched; `legacy-windows/` remains read-only.
 - Commands/tests and results:
-  - `./Scripts/build-dev-app.sh` from `macOS/ColorControlMac`: passed with the
+  - `./Scripts/build-dev-app.sh` from `macOS/VibeScreen`: passed with the
     selected Xcode 27.0 / Swift 6.4 toolchain.
   - The replacement command's EXIT trap returned non-zero because it assigned
     to zsh's read-only `status` variable after moving the new bundle into place;
@@ -2702,7 +2702,7 @@ Never replace earlier entries. Append new evidence and update `Current status` p
   - `git diff --check`: passed after final documentation updates.
   - `codesign --verify --deep --strict --verbose=2` passed for both the staged
     and installed app bundles; bundle identifier is `com.colorcontrol.mac`.
-  - Installed executable SHA-256 matches `.build/ColorControlMac.app`.
+  - Installed executable SHA-256 matches `.build/VibeScreen.app`.
   - No test suite or TV command was run. The app was not launched, so window
     visibility and real-TV cancellation still need manual verification.
 - Decisions made: use the existing local development build path and preserve
@@ -2734,23 +2734,23 @@ Never replace earlier entries. Append new evidence and update `Current status` p
     remains accessory-only with the main window hidden.
   - Quit and application termination retain the existing cleanup handler; the
     status item removes its gesture recognizer and popover during termination.
-  - Built with `macOS/ColorControlMac/Scripts/build-dev-app.sh`, then gracefully
+  - Built with `macOS/VibeScreen/Scripts/build-dev-app.sh`, then gracefully
     quit the older running app and replaced
-    `$HOME/Documents/ColorControlMac.app`.
+    `$HOME/Documents/VibeScreen.app`.
   - Strict signature verification passed for staged and installed bundles;
     installed bundle ID is `com.colorcontrol.mac`; installed and built
     executables byte-match with SHA-256
     `277030adacf69acfa07dd7dc482631d8b480ac4576168a0d84ecbc1618949ace`.
     The replaced bundle is retained at
-    `$HOME/Documents/.ColorControlMac-replace-windowscene-20260929/ColorControlMac.previous.app`.
-- Files changed: `ColorControlMacApp.swift`, `MenuBarView.swift`, new
+    `$HOME/Documents/.VibeScreen-replace-windowscene-20260929/VibeScreen.previous.app`.
+- Files changed: `VibeScreenApp.swift`, `MenuBarView.swift`, new
   `MenuBarStatusItemController.swift`, `README.md`, `UI_DESIGN_SYSTEM.md`,
   `PLATFORM_API_MAP.md`, `ARCHITECTURE.md`, `NEXUS.md`, `STATUS.md`,
   `FEATURE_PARITY_MATRIX.md`, `FUNCTION_PARITY_CHECKLIST.md`, the menu-bar row in
   the UI screen inventory, and this handoff. Unrelated worktree changes remain
   untouched; `legacy-windows/` remains read-only.
 - Commands/tests and results:
-  - `./Scripts/build-dev-app.sh` from `macOS/ColorControlMac`: passed with the
+  - `./Scripts/build-dev-app.sh` from `macOS/VibeScreen`: passed with the
     selected Xcode 27.0 / Swift 6.4 toolchain.
   - `codesign --verify --deep --strict --verbose=2` passed for staged and
     installed app bundles; `plutil` confirmed bundle ID and `cmp` confirmed the
@@ -2785,9 +2785,9 @@ Never replace earlier entries. Append new evidence and update `Current status` p
     in `ColorControlApplicationDelegate`, returning `false` so the persistent
     menu-bar status item can outlive hidden or closed window scenes.
   - Rebuilt with `./Scripts/build-dev-app.sh` and replaced
-    `$HOME/Documents/ColorControlMac.app`. The previous installed app
+    `$HOME/Documents/VibeScreen.app`. The previous installed app
     is retained at
-    `$HOME/Documents/.ColorControlMac-replace-launchfix-20260930/ColorControlMac.previous.app`.
+    `$HOME/Documents/.VibeScreen-replace-launchfix-20260930/VibeScreen.previous.app`.
   - Confirmed the new process stays running with zero app windows after
     startup and again after closing the main window.
   - Confirmed left- and right-click open/toggle the same popover; the `Open
@@ -2796,14 +2796,14 @@ Never replace earlier entries. Append new evidence and update `Current status` p
   - Checked saved TV automation state before launch: device automation triggers
     are disabled and there are no startup presets, so startup did not issue TV
     commands.
-- Files changed: `ColorControlMacApp.swift`, this progress handoff,
+- Files changed: `VibeScreenApp.swift`, this progress handoff,
   `migration/docs/BUILD_RELEASE.md`, `migration/docs/NEXUS.md`, and
   `migration/docs/FEATURE_PARITY_MATRIX.md`. Existing unrelated worktree changes
   remain untouched; `legacy-windows/` remains read-only.
 - Commands/checks and results:
   - `./Scripts/build-dev-app.sh`: passed with Xcode 27.0 / Swift 6.4.
-  - `open -n -a $HOME/Documents/ColorControlMac.app`: exit 0;
-    `pgrep -x ColorControlMac` confirmed the process remained live. Later check
+  - `open -n -a $HOME/Documents/VibeScreen.app`: exit 0;
+    `pgrep -x VibeScreen` confirmed the process remained live. Later check
     showed PID 6773 running for over 17 minutes, with zero visible app windows.
   - `codesign --verify --deep --strict` passed; bundle ID is
     `com.colorcontrol.mac`; installed and built executables match, SHA-256
@@ -2818,7 +2818,7 @@ Never replace earlier entries. Append new evidence and update `Current status` p
   SwiftUI main-window flow.
 - Open issues: XCTest, Developer ID signing/notarization, TV hardware commands,
   and power-automation sleep/wake behavior remain unverified. The existing
-  `ColorControlMac.zip` was not rebuilt.
+  `VibeScreen.zip` was not rebuilt.
 - Exact next safe step: continue the opt-in LG pairing and pointer-remote
   hardware checks; do not run power automation unless those TV actions are
   intended.
@@ -2838,9 +2838,9 @@ Never replace earlier entries. Append new evidence and update `Current status` p
     popover when another app activates. The observer is removed when the
     popover closes or the status item is torn down.
   - Rebuilt using `./Scripts/build-dev-app.sh` and replaced
-    `$HOME/Documents/ColorControlMac.app`. The previous installed
+    `$HOME/Documents/VibeScreen.app`. The previous installed
     bundle is retained at
-    `$HOME/Documents/.ColorControlMac-replace-autodismiss-20260930/ColorControlMac.previous.app`.
+    `$HOME/Documents/.VibeScreen-replace-autodismiss-20260930/VibeScreen.previous.app`.
   - Launched the replacement; process 9918 remained running. Strict
     `codesign --verify --deep --strict` passed and the installed executable
     SHA-256 is
@@ -2853,8 +2853,8 @@ Never replace earlier entries. Append new evidence and update `Current status` p
 - Commands/checks and results:
   - `./Scripts/build-dev-app.sh`: passed with Xcode 27.0 / Swift 6.4.
   - `codesign --verify --deep --strict --verbose=2
-    $HOME/Documents/ColorControlMac.app`: passed.
-  - `pgrep -fl ColorControlMac`: confirmed the replacement process is live;
+    $HOME/Documents/VibeScreen.app`: passed.
+  - `pgrep -fl VibeScreen`: confirmed the replacement process is live;
     installed executable SHA-256 recorded above.
   - `git diff --check`: passed. No tests were added or run.
   - Updated-build focus-out UI verification is pending: an unrelated
@@ -2887,8 +2887,31 @@ Never replace earlier entries. Append new evidence and update `Current status` p
 
 ### 2026-10-10 — Isolate the original private repository before publication
 
-- The owner approved retaining the original GitHub repository as a private backup and creating a fresh public ScreenPilot repository from sanitized `main`.
+- The owner approved retaining the original GitHub repository as a private backup and creating a fresh public VibeScreen repository from sanitized `main`.
 - A force push removed the generated SARIF report and company author email from reachable history, but GitHub still served the old commit by SHA. The original repository must remain private to prevent exposing that cache.
-- The fresh public repository receives only the sanitized initial commit and reviewed native-source/documentation commits. The public origin URL remains `https://github.com/hiepkhach1005/ScreenPilot.git`.
+- The fresh public repository receives only the sanitized initial commit and reviewed native-source/documentation commits. The public origin URL remains `https://github.com/hiepkhach1005/VibeScreen.git`.
 - Publication verification checks repository visibility/identity, remote `main` and README hashes, clean worktree, absence of SARIF from branch history, and noreply author metadata. App build/test suites are not part of this repository-management follow-up.
 - Exact next development step: continue the previously recorded opt-in LG pairing and pointer-remote hardware checks; avoid power automation unless those TV actions are intended.
+
+## 2026-10-20 — Menu-bar popover focus fix (macOS 27.0, Xcode 27.0)
+
+- Problem: popover opened while app inactive, so controls rendered dimmed and needed an extra click; outside clicks did not dismiss it.
+- Change: `MenuBarStatusItemController.swift` now calls `NSApp.activate()` and makes the popover window key before/after showing, and installs a global mouse-down monitor (removed on close/teardown) that closes the popover on clicks in other apps.
+- Verification: `swift build` succeeded. Runtime behavior not yet confirmed by user.
+- Next safe step: user confirms first-click interactivity and outside-click dismissal in the dev app bundle.
+
+## 2026-10-20 — Rename to VibeScreen + shared Vibe icon family (macOS 27.0, Xcode 27.0)
+
+- Native project moved `macOS/ColorControlMac` → `macOS/VibeScreen`; targets/modules renamed to `VibeScreen`, `VibeScreenCore`, `VibeScreenCoreTests`; bundle id `com.vibescreen.mac`; UI strings, logger subsystem, compile flag `VIBESCREEN_DEVELOPMENT_FILE_CREDENTIALS` renamed. Doc/skill path references updated (legacy-windows untouched).
+- Intentionally kept old identity: LG signed pairing manifest (`com.colorcontrol.app`, app/vendor names), Samsung client name, and Keychain service `com.colorcontrol.mac`, so existing pairings and Keychain items stay valid.
+- `NativeStore.makeDefault()` now moves `Application Support/ColorControl` → `VibeScreen` once and renames `ColorControl.json(.bak)`; verified on this Mac (credentials, diagnostics, snapshot moved).
+- New icon from `Scripts/render-app-icon.swift` (shared renderer for VibeScreen/VibeShot/MacPad); iconset and `VibeScreenIcon.icns` regenerated.
+- Verification: `swift build` OK; `Scripts/build-dev-app.sh` OK; app launched. `swift test` fails to compile on a pre-existing invalid raw string in `LegacyPresetImporterTests.swift:6` (unchanged by this work).
+- Next safe step: fix the pre-existing test literal, then run `swift test`.
+
+## 2026-10-20 — Rename VibeMonitor → VibeScreen; repository ScreenPilot → VibeScreen
+
+- Project now at `macOS/VibeScreen` (targets `VibeScreen`, `VibeScreenCore`, `VibeScreenCoreTests`, bundle id `com.vibescreen.mac`, flag `VIBESCREEN_DEVELOPMENT_FILE_CREDENTIALS`). All non-legacy `ScreenPilot` references renamed to `VibeScreen`; local folder and GitHub repository renamed to `VibeScreen`.
+- `NativeStore.makeDefault()` migrates `Application Support/VibeMonitor` or `ColorControl` into `VibeScreen` once; verified on this Mac. TV pairing identity and Keychain service still use the ColorControl values on purpose.
+- Verification: `Scripts/build-dev-app.sh` OK, app launched (pid observed). `swift test` still blocked by the pre-existing invalid raw string in `LegacyPresetImporterTests.swift`.
+- Next safe step: fix that test literal and run `swift test`.

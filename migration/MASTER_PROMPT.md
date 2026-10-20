@@ -8,7 +8,7 @@ Use this prompt from the repository root. Treat every requirement below as proje
 
 You are the lead macOS engineer, software architect, migration engineer, test engineer, and native UI designer responsible for rewriting ColorControl as a production-quality macOS application.
 
-The original Windows application is located at `legacy-windows/`. It is the behavioral source of truth and must remain read-only. All native application code must be written under `macOS/ColorControlMac/`.
+The original Windows application is located at `legacy-windows/`. It is the behavioral source of truth and must remain read-only. All native application code must be written under `macOS/VibeScreen/`.
 
 Rewrite the application with:
 
@@ -278,38 +278,38 @@ Each skill needs `SKILL.md` and `agents/openai.yaml`. Keep `SKILL.md` concise an
 
 ## Target architecture
 
-Create the native project under `macOS/ColorControlMac/` with clear layers resembling:
+Create the native project under `macOS/VibeScreen/` with clear layers resembling:
 
-- `ColorControlMac/App/`
-- `ColorControlMac/Domain/Models/`
-- `ColorControlMac/Domain/Protocols/`
-- `ColorControlMac/Domain/UseCases/`
-- `ColorControlMac/Features/MenuBar/`
-- `ColorControlMac/Features/Devices/`
-- `ColorControlMac/Features/Presets/`
-- `ColorControlMac/Features/Automation/`
-- `ColorControlMac/Features/GameLauncher/`
-- `ColorControlMac/Features/ColorProfiles/`
-- `ColorControlMac/Features/Settings/`
-- `ColorControlMac/Features/Logs/`
-- `ColorControlMac/Infrastructure/LGWebOS/`
-- `ColorControlMac/Infrastructure/SamsungTizen/`
-- `ColorControlMac/Infrastructure/Discovery/`
-- `ColorControlMac/Infrastructure/WakeOnLAN/`
-- `ColorControlMac/Infrastructure/Persistence/`
-- `ColorControlMac/Infrastructure/Keychain/`
-- `ColorControlMac/Infrastructure/Logging/`
-- `ColorControlMac/Infrastructure/Updates/`
-- `ColorControlMac/Platform/macOS/Power/`
-- `ColorControlMac/Platform/macOS/Displays/`
-- `ColorControlMac/Platform/macOS/ColorSync/`
-- `ColorControlMac/Platform/macOS/GlobalHotkeys/`
-- `ColorControlMac/Platform/macOS/ProcessMonitoring/`
-- `ColorControlMac/Platform/macOS/LoginItem/`
-- `ColorControlMac/Platform/macOS/Permissions/`
-- `ColorControlMac/Resources/`
-- `ColorControlMacTests/`
-- `ColorControlMacUITests/`
+- `VibeScreen/App/`
+- `VibeScreen/Domain/Models/`
+- `VibeScreen/Domain/Protocols/`
+- `VibeScreen/Domain/UseCases/`
+- `VibeScreen/Features/MenuBar/`
+- `VibeScreen/Features/Devices/`
+- `VibeScreen/Features/Presets/`
+- `VibeScreen/Features/Automation/`
+- `VibeScreen/Features/GameLauncher/`
+- `VibeScreen/Features/ColorProfiles/`
+- `VibeScreen/Features/Settings/`
+- `VibeScreen/Features/Logs/`
+- `VibeScreen/Infrastructure/LGWebOS/`
+- `VibeScreen/Infrastructure/SamsungTizen/`
+- `VibeScreen/Infrastructure/Discovery/`
+- `VibeScreen/Infrastructure/WakeOnLAN/`
+- `VibeScreen/Infrastructure/Persistence/`
+- `VibeScreen/Infrastructure/Keychain/`
+- `VibeScreen/Infrastructure/Logging/`
+- `VibeScreen/Infrastructure/Updates/`
+- `VibeScreen/Platform/macOS/Power/`
+- `VibeScreen/Platform/macOS/Displays/`
+- `VibeScreen/Platform/macOS/ColorSync/`
+- `VibeScreen/Platform/macOS/GlobalHotkeys/`
+- `VibeScreen/Platform/macOS/ProcessMonitoring/`
+- `VibeScreen/Platform/macOS/LoginItem/`
+- `VibeScreen/Platform/macOS/Permissions/`
+- `VibeScreen/Resources/`
+- `VibeScreenTests/`
+- `VibeScreenUITests/`
 - `TestFixtures/`
 
 Adjust this only through a documented ADR.
@@ -479,6 +479,6 @@ Begin at the stopping point recorded in `migration/PROGRESS.md`. For the current
 4. create and validate repository skills;
 5. produce the first complete source map and feature-parity matrix;
 6. derive the final architecture from source evidence;
-7. only then scaffold native code in `macOS/ColorControlMac/`.
+7. only then scaffold native code in `macOS/VibeScreen/`.
 
 Do not translate C# syntax into Swift mechanically. Preserve behavior while redesigning the implementation as a native macOS application.

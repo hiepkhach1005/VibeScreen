@@ -6,11 +6,11 @@
 - Current slice: Swift package, native core execution, migration coordinator,
   TV/WOL/power adapters, game/display adapters, and SwiftUI/AppKit menu-bar shell
   are present.
-- Native code: implemented foundation under `macOS/ColorControlMac/`, including
+- Native code: implemented foundation under `macOS/VibeScreen/`, including
   a dynamic Devices sidebar tree, inline device details, and a public-API
   System Monitor with a persisted sampling interval.
 - macOS build: the SwiftPM development app bundle built with Xcode 27.0 / Swift
-  6.4 and was replaced at `$HOME/Documents/ColorControlMac.app`;
+  6.4 and was replaced at `$HOME/Documents/VibeScreen.app`;
   strict signature verification and binary hash comparison passed. Menu-bar
   click UI smoke, XCTest, Xcode archive, distribution signing, and hardware
   checks remain open.

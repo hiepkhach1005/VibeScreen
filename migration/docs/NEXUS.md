@@ -26,7 +26,7 @@ This is the compact project index. Detailed evidence belongs in the linked files
   policy changes cancel pending actions using the prior policy.
 - macOS build verification: the SwiftPM development app bundle built with
   Xcode 27.0 / Swift 6.4 and was replaced at
-  `$HOME/Documents/ColorControlMac.app`; strict code-sign verification
+  `$HOME/Documents/VibeScreen.app`; strict code-sign verification
   passed and the installed binary matches the build. Launch smoke confirmed it
   stays alive as a menu-bar app with no main window. Left/right-click popover
   activation, Open-window behavior, and return to menu-bar-only after window
@@ -50,7 +50,7 @@ This is the compact project index. Detailed evidence belongs in the linked files
 | Area | Role | Mutation policy |
 |---|---|---|
 | `legacy-windows/` | Behavioral source of truth | Read-only |
-| `macOS/ColorControlMac/` | Native Swift application | New production code only |
+| `macOS/VibeScreen/` | Native Swift application | New production code only |
 | `migration/` | Prompt, progress, decisions, maps, ADRs, and handoff | Keep current after every session |
 | `.agents/skills/` | Repeatable AI workflows and references | Validate after updates |
 

@@ -1,6 +1,6 @@
 ---
 name: build-colorcontrol-core
-description: Design and implement the native Swift domain and application-service layer for ColorControl, including device abstractions, preset and step execution, trigger evaluation, automation orchestration, game launching workflows, dependency injection, cancellation, and error policy. Use when adding or changing non-UI business logic, domain models, use cases, coordinators, app services, preset engines, automation engines, or game-launch behavior under macOS/ColorControlMac.
+description: Design and implement the native Swift domain and application-service layer for ColorControl, including device abstractions, preset and step execution, trigger evaluation, automation orchestration, game launching workflows, dependency injection, cancellation, and error policy. Use when adding or changing non-UI business logic, domain models, use cases, coordinators, app services, preset engines, automation engines, or game-launch behavior under macOS/VibeScreen.
 ---
 
 # Build ColorControl Core

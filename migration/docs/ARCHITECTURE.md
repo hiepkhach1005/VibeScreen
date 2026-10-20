@@ -24,22 +24,22 @@ Domain models / trigger evaluator / preset executor
 ## Target layout
 
 ```text
-macOS/ColorControlMac/
+macOS/VibeScreen/
   Package.swift
   Sources/
-    ColorControlCore/
+    VibeScreenCore/
       Domain/
       Application/
       Persistence/
       Protocols/
       Platform/
-    ColorControlMac/
+    VibeScreen/
       App/
       Features/
       Platform/
       Resources/
   Tests/
-    ColorControlCoreTests/
+    VibeScreenCoreTests/
 ```
 
 The package keeps pure core tests independent from AppKit. On a Mac build
@@ -50,12 +50,12 @@ ADR.
 
 ## Module boundaries
 
-- `ColorControlCore.Domain`: models and pure rules; no SwiftUI/AppKit/network/file imports.
-- `ColorControlCore.Application`: preset execution, event routing, repositories, power coordination, and effect protocols.
-- `ColorControlMac.App`: composition root and lifecycle.
-- `ColorControlMac.Features`: SwiftUI screens and presentation state.
-- `ColorControlMac.Platform`: public macOS adapters for power/session/display/process/login and TV transport.
-- `ColorControlMac.Infrastructure`: future release/update boundaries; production
+- `VibeScreenCore.Domain`: models and pure rules; no SwiftUI/AppKit/network/file imports.
+- `VibeScreenCore.Application`: preset execution, event routing, repositories, power coordination, and effect protocols.
+- `VibeScreen.App`: composition root and lifecycle.
+- `VibeScreen.Features`: SwiftUI screens and presentation state.
+- `VibeScreen.Platform`: public macOS adapters for power/session/display/process/login and TV transport.
+- `VibeScreen.Infrastructure`: future release/update boundaries; production
   secrets remain in Keychain, with a compile-time local-debug file adapter.
 
 ## Concurrency

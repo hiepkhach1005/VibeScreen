@@ -2,7 +2,7 @@
 
 Audit date: 2026-08-11  
 Legacy source: legacy-windows/  
-Native source: macOS/ColorControlMac/  
+Native source: macOS/VibeScreen/  
 Canonical purpose: compare the user-observable and behaviorally meaningful functions that can be retained on macOS.
 
 ## How to use this file
@@ -48,10 +48,10 @@ where required.
 
 | ID | Legacy function or behavior | Native mapping and evidence | Status | Remaining checklist |
 |---|---|---|---|---|
-| APP-001 | Program.Main, MainAsync, RunApp, CreateHostBuilder, RegisterSharedServices: start the interactive process and compose services | macOS/ColorControlMac/App/ColorControlMacApp.swift, App/AppContainer.swift, Swift Package executable | Partial | [x] Build the development app bundle on macOS 27.0/Xcode 27.0/Swift 6.4. [ ] Verify Finder/Dock launch and first-launch failure handling. |
+| APP-001 | Program.Main, MainAsync, RunApp, CreateHostBuilder, RegisterSharedServices: start the interactive process and compose services | macOS/VibeScreen/App/VibeScreenApp.swift, App/AppContainer.swift, Swift Package executable | Partial | [x] Build the development app bundle on macOS 27.0/Xcode 27.0/Swift 6.4. [ ] Verify Finder/Dock launch and first-launch failure handling. |
 | APP-002 | Program.OpenDefaultUi, OpenMainForm, OpenNewUi, OpenNewUiEmbedded, StartOrStopUiServer: open or restore the main UI | Features/MainWindowView.swift, Features/MenuBarView.swift, SwiftUI Window scene/OpenWindowAction and NSStatusItem/NSPopover | Partial | [x] Left- and right-click toggle the same menu-bar popover. [x] Menu-bar Open focuses or opens the main Window scene. [ ] Verify reopen, resize, and activation on macOS. |
 | APP-003 | Program.IsMainFormOpened, mutex and EnumThreadWindows: prevent duplicate instance and bring the existing window front | ColorControlApplicationDelegate focus path and single SwiftUI Window scene; no duplicate-process lock | Partial | [x] Reuse/focus the existing main window from the menu bar. [ ] Add duplicate-process prevention and a UI test. |
-| APP-004 | Program.Exit, Restart, MainForm_FormClosing, MainWorker.HandleQueryEndSessionEvent, GlobalSave: save and close safely | Persistence/NativeStore.swift, AppContainer.persistNativeState/prepareForTermination, ColorControlMacApp lifecycle shell/applicationWillTerminate, MenuBarView Quit | Partial | [x] Stop platform event observation/tasks and global shortcuts before menu-bar Quit or Command-Q terminates the process, with an application-delegate fallback for other Quit routes. [ ] Verify cancellation of already-active protocol work, termination/background save, and atomic backup recovery. |
+| APP-004 | Program.Exit, Restart, MainForm_FormClosing, MainWorker.HandleQueryEndSessionEvent, GlobalSave: save and close safely | Persistence/NativeStore.swift, AppContainer.persistNativeState/prepareForTermination, VibeScreenApp lifecycle shell/applicationWillTerminate, MenuBarView Quit | Partial | [x] Stop platform event observation/tasks and global shortcuts before menu-bar Quit or Command-Q terminates the process, with an application-delegate fallback for other Quit routes. [ ] Verify cancellation of already-active protocol work, termination/background save, and atomic backup recovery. |
 | APP-005 | Program.RunService, UseWindowsService, Windows Service install/start/stop | User-session app and optional LoginItemManager using SMAppService; no Windows service | Not applicable | [x] Keep the Windows Service out. [ ] Decide whether a login item is sufficient for the final product. |
 | CFG-001 | Program.LoadConfig, Config, OptionsService.GetConfig, SetConfig, SaveSettings: load and save global settings | Persistence/NativeStore.swift, NativeAppSettings, Application Support JSON schema v2 | Partial | [ ] Complete the settings field mapping. [ ] Add migration golden fixtures and macOS store tests. |
 | CFG-002 | OptionsService.SetStartAfterLogin, SetStartMinimized, SetMinimizeOnClose, SetMinimizeToTray, SetDarkMode, SetProcessMonitorPollingInterval, SetLogLevel | `LoginItemManager`, `NativeAppSettings`, `SettingsView`, and `ColorControlApplicationDelegate`; every launch starts menu-bar-only, with the main window opened explicitly from MenuBarView | Partial | [x] Persist launch-at-login. [x] Start all launches menu-bar-only and expose explicit menu-bar window opening. [ ] Complete retained log/minimize/appearance preferences and a real launch UI smoke test. |
@@ -88,7 +88,7 @@ where required.
 | PRE-006 | ServiceManager.HandleExternalServiceAsync and module-specific preset steps | Application/PresetDeviceActionRouter.swift: TV command, WOL/power-on, display refresh, application launch | Partial | [ ] Implement the remaining retained action capabilities. [ ] Keep unsupported actions as explicit user-visible failures. |
 | PRE-007 | PresetBase.UpdateTrigger, UpdateTriggers, SetSteps, PresetTrigger.TriggerActive | Typed Preset, PresetTrigger, and action model in Domain/Models.swift | Partial | [ ] Compare every legacy trigger field and default. [ ] Persist all supported trigger conditions. |
 | PRE-008 | GetLastAppliedPreset, LastUsed, quick-access visibility, NotifyIconManager preset actions | Overview preset section and Preset.showInQuickAccess; menu-bar preset actions were deliberately removed for the compact native layout | Partial | [ ] Persist and update last-used state after successful execution. [ ] Decide whether another bounded quick-access surface is still required. |
-| PRE-009 | ValidatePreset, AddJsonConverter, unknown action compatibility and error popup policy | ColorControlCoreError, typed failures, preserved raw/unknown action warnings | Implemented (static) | [ ] Add validation rules for device references, action parameters, and destructive actions. [ ] Verify no silent action loss. |
+| PRE-009 | ValidatePreset, AddJsonConverter, unknown action compatibility and error popup policy | VibeScreenCoreError, typed failures, preserved raw/unknown action warnings | Implemented (static) | [ ] Add validation rules for device references, action parameters, and destructive actions. [ ] Verify no silent action loss. |
 | PRE-010 | ExecuteInvokableAction, GetInvokableActions, GetInfo for retained modules | Native device command router and basic device UI | Partial | [ ] Expose a capability-driven action list instead of hard-coded bounded buttons. [ ] Add per-action availability and confirmation. |
 
 ## D. LG WebOS functions
@@ -238,7 +238,7 @@ decision, and the macOS build plus required TV/display/power tests have evidence
 ## Next audit continuation point
 
 1. On a macOS build machine, run swift test and build
-   macOS/ColorControlMac/Package.swift in Xcode.
+   macOS/VibeScreen/Package.swift in Xcode.
 2. Fix Swift 6 and SDK diagnostics before adding more behavior.
 3. Continue with LG pairing -> reconnect/subscription -> pointer remote -> WOL
    and power policy, then Samsung token flow.

@@ -1,14 +1,14 @@
 <p align="center">
-  <img src="macOS/ColorControlMac/Sources/ColorControlMac/Resources/AppIcon-1024.png" width="112" alt="ScreenPilot native app icon">
+  <img src="macOS/VibeScreen/Sources/VibeScreen/Resources/AppIcon-1024.png" width="112" alt="VibeScreen native app icon">
 </p>
 
-# ScreenPilot
+# VibeScreen
 
 **Your TV controls, desktop automation, and system overview — within reach on your Mac.**
 
-ScreenPilot is a native macOS rewrite of ColorControl's non-GPU workflows. It brings LG webOS and Samsung Tizen control, presets, Wake-on-LAN, and desktop automation into a SwiftUI/AppKit app with quick menu-bar access.
+VibeScreen is a native macOS rewrite of ColorControl's non-GPU workflows. It brings LG webOS and Samsung Tizen control, presets, Wake-on-LAN, and desktop automation into a SwiftUI/AppKit app with quick menu-bar access.
 
-The native executable is currently named **ColorControlMac**. ScreenPilot is the repository name.
+The native executable is currently named **VibeScreen**. VibeScreen is the repository name.
 
 ![macOS 14+](https://img.shields.io/badge/macOS-14%2B-111827?logo=apple)
 ![Swift](https://img.shields.io/badge/Swift-native-F05138?logo=swift&logoColor=white)
@@ -43,10 +43,10 @@ This is a **development preview**. A control visible in the UI does not imply ve
 Requires **macOS 14+** and **Xcode with Swift 6 support**. Use the full Xcode toolchain.
 
 ```sh
-git clone https://github.com/hiepkhach1005/ScreenPilot.git
-cd ScreenPilot/macOS/ColorControlMac
+git clone https://github.com/hiepkhach1005/VibeScreen.git
+cd VibeScreen/macOS/VibeScreen
 swift build
-swift run ColorControlMac
+swift run VibeScreen
 ```
 
 To run the core tests:
@@ -61,12 +61,12 @@ Production builds use **Keychain** for pairing credentials. The optional `Script
 
 | Path | Contents |
 | --- | --- |
-| [`macOS/ColorControlMac/`](macOS/ColorControlMac/) | Native Swift app, core, platform adapters, and tests |
+| [`macOS/VibeScreen/`](macOS/VibeScreen/) | Native Swift app, core, platform adapters, and tests |
 | [`migration/`](migration/) | Progress, decisions, feature maps, and acceptance evidence |
 | [`legacy-windows/`](legacy-windows/) | Original ColorControl Windows source retained as the behavioral reference |
 
-See the [native project README](macOS/ColorControlMac/README.md), [architecture](migration/docs/ARCHITECTURE.md), and [feature parity matrix](migration/docs/FEATURE_PARITY_MATRIX.md). [Open an issue](https://github.com/hiepkhach1005/ScreenPilot/issues) with your TV model, firmware, and steps to reproduce; omit pairing keys, tokens, and network identifiers.
+See the [native project README](macOS/VibeScreen/README.md), [architecture](migration/docs/ARCHITECTURE.md), and [feature parity matrix](migration/docs/FEATURE_PARITY_MATRIX.md). [Open an issue](https://github.com/hiepkhach1005/VibeScreen/issues) with your TV model, firmware, and steps to reproduce; omit pairing keys, tokens, and network identifiers.
 
 ## Credits and licensing
 
-ScreenPilot builds on [ColorControl by Maassoft](https://github.com/Maassoft/ColorControl). The original Windows code and copyright notices are retained. The upstream [GNU GPL v3 license](LICENSE.txt), [third-party notices](LICENSE-THIRD-PARTY.txt), and [Novideo sRGB notice](LICENSE-NOVIDEO.txt) are included; see [third-party attribution](THIRD_PARTY_NOTICES.md) for their scope and source.
+VibeScreen builds on [ColorControl by Maassoft](https://github.com/Maassoft/ColorControl). The original Windows code and copyright notices are retained. The upstream [GNU GPL v3 license](LICENSE.txt), [third-party notices](LICENSE-THIRD-PARTY.txt), and [Novideo sRGB notice](LICENSE-NOVIDEO.txt) are included; see [third-party attribution](THIRD_PARTY_NOTICES.md) for their scope and source.

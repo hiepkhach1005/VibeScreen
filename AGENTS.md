@@ -7,14 +7,14 @@ Before making any change, read these files in order:
 1. `migration/PROGRESS.md`
 2. `migration/MASTER_PROMPT.md`
 3. `migration/DECISIONS.md`
-4. `macOS/ColorControlMac/README.md`
+4. `macOS/VibeScreen/README.md`
 
 Continue from the `Current stopping point` recorded in `migration/PROGRESS.md`. Do not restart completed work unless verification shows it is incorrect.
 
 ## Repository boundaries
 
 - `legacy-windows/` is the read-only source of truth for legacy behavior. Do not modify, format, rename, or delete its contents.
-- All new native application code belongs under `macOS/ColorControlMac/`.
+- All new native application code belongs under `macOS/VibeScreen/`.
 - Migration plans, maps, ADRs, reports, and handoff notes belong under `migration/` until the native project creates its own `docs/` tree.
 - Keep the repository root limited to shared metadata and navigation files.
 

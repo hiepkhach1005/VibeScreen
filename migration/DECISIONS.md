@@ -15,7 +15,7 @@ This file records decisions already made with the project owner. A future coding
 | DEC-007 | Replace Windows services and event integrations with appropriate macOS user-session services, Login Items, LaunchAgents, NSWorkspace, IOKit, CoreGraphics, and ColorSync. | Accepted in principle; exact API mapping requires audit |
 | DEC-008 | Preserve all applicable non-GPU behavior, including LG, Samsung, WOL, presets, automation, power events, game launching, display controls, and color profiles. | Accepted |
 | DEC-009 | Preserve the legacy source in `legacy-windows/` as read-only until feature parity is accepted. | Accepted |
-| DEC-010 | Write all new application code under `macOS/ColorControlMac/`. | Accepted |
+| DEC-010 | Write all new application code under `macOS/VibeScreen/`. | Accepted |
 
 ## Decisions still required later
 

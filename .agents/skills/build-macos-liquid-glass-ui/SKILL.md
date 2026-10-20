@@ -1,6 +1,6 @@
 ---
 name: build-macos-liquid-glass-ui
-description: Design, implement, and visually verify native macOS interfaces for ColorControl using SwiftUI, selective AppKit bridges, current Liquid Glass APIs, Apple interaction patterns, menu-bar controls, accessibility, and complete loading/empty/error states. Use for any task that creates or reshapes SwiftUI views, MenuBarExtra or NSStatusItem experiences, navigation, settings, device dashboards, remotes, presets, layout, design tokens, assets, copy, animations, previews, or UI tests under macOS/ColorControlMac.
+description: Design, implement, and visually verify native macOS interfaces for ColorControl using SwiftUI, selective AppKit bridges, current Liquid Glass APIs, Apple interaction patterns, menu-bar controls, accessibility, and complete loading/empty/error states. Use for any task that creates or reshapes SwiftUI views, MenuBarExtra or NSStatusItem experiences, navigation, settings, device dashboards, remotes, presets, layout, design tokens, assets, copy, animations, previews, or UI tests under macOS/VibeScreen.
 ---
 
 # Build macOS Liquid Glass UI

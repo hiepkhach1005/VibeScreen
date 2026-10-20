@@ -4,11 +4,11 @@
 
 Xcode 27.0 (27A266a) and Swift 6.4 are selected on macOS 27.0/arm64. On
 2026-09-30, `Scripts/build-dev-app.sh` rebuilt the SwiftPM development app bundle
-and replaced `$HOME/Documents/ColorControlMac.app`. The latest strict
+and replaced `$HOME/Documents/VibeScreen.app`. The latest strict
 code-sign verification passed; installed executable SHA-256 is
 `c09b4a62bc4e0f639f704b2d7df1e87e8dc1f3a082c6c133d19ed62c542d3778`. The
 replaced bundle is retained at
-`$HOME/Documents/.ColorControlMac-replace-autodismiss-20260930/ColorControlMac.previous.app`.
+`$HOME/Documents/.VibeScreen-replace-autodismiss-20260930/VibeScreen.previous.app`.
 Launch Services startup smoke confirmed it stays alive as a menu-bar app with
 no main window. Left/right-click popover activation and Open-window behavior
 were previously confirmed. The latest build closes the popover on activation
@@ -18,7 +18,7 @@ archive, distribution signing, entitlements, and notarization remain
 unverified.
 
 `Scripts/build-dev-app.sh` assembles the SwiftPM binary into a development
-`ColorControlMac.app` with the committed bundle identifier and Local Network
+`VibeScreen.app` with the committed bundle identifier and Local Network
 usage description. The script explicitly compiles the debug-only
 `COLORCONTROL_DEVELOPMENT_FILE_CREDENTIALS` mode, which stores newly paired TV
 credentials in owner-only plaintext files under Application Support and avoids
@@ -32,8 +32,8 @@ Xcode archive, Developer ID signature, or notarization.
 
 ## Development build
 
-- Open `macOS/ColorControlMac/Package.swift` in Xcode after it is scaffolded.
-- Use `macOS/ColorControlMac/ColorControlMac.entitlements` as the starting
+- Open `macOS/VibeScreen/Package.swift` in Xcode after it is scaffolded.
+- Use `macOS/VibeScreen/VibeScreen.entitlements` as the starting
   target entitlement file; keep Local Network usage text in `Resources/Info.plist`
   and verify the final signed app's sandbox/network behavior.
 - Select the documented deployment target and architecture.

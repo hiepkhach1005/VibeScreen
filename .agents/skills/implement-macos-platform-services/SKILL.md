@@ -1,6 +1,6 @@
 ---
 name: implement-macos-platform-services
-description: Implement and verify ColorControl adapters for documented macOS APIs, including app and session lifecycle, sleep/wake and power assertions, screensaver and display events, CoreGraphics display control, ColorSync profiles, global shortcuts, process monitoring, Login Items or LaunchAgents, OSLog, permissions, and optional XPC boundaries. Use when replacing Win32, WMI, Windows Service, registry, Task Scheduler, named-pipe, display, hotkey, process, power, or privilege behavior under macOS/ColorControlMac/Platform.
+description: Implement and verify ColorControl adapters for documented macOS APIs, including app and session lifecycle, sleep/wake and power assertions, screensaver and display events, CoreGraphics display control, ColorSync profiles, global shortcuts, process monitoring, Login Items or LaunchAgents, OSLog, permissions, and optional XPC boundaries. Use when replacing Win32, WMI, Windows Service, registry, Task Scheduler, named-pipe, display, hotkey, process, power, or privilege behavior under macOS/VibeScreen/Platform.
 ---
 
 # Implement macOS Platform Services
